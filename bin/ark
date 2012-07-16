@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+load File.join(File.dirname(__FILE__), '../lib/arkweb-3.rb')
+
+AW::Interface.run
+
