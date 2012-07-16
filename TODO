@@ -1,0 +1,3 @@
+* Make `maruku` and `wikicloth` optional dependencies.
+* Make `wikicloth` PKGBUILD available on the AUR to satisfy dependencies.
+
