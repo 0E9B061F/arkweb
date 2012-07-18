@@ -87,28 +87,16 @@ Conf = Trollop.options do
     :short => :v
   opt :quiet, "Run silently",
     :short => :q
-  opt :plugin, "A comma-seperated list of plugins to load",
-    :short => :p,
-    :default => nil
+# TODO
+#  opt :plugin, "A comma-seperated list of plugins to load",
+#    :short => :p,
+#    :default => nil
 end
 
 
-
-class Plugin
-end
-
-
-
-class Timer
-  def self.reset
-    @@start = Time.now
-  end
-  def self.time
-    t = Time.now - @@start
-    "#{t.round(3)}"
-  end
-  reset
-end
+# TODO
+#class Plugin
+#end
 
 
 
@@ -130,6 +118,7 @@ class Site
   def initialize(root)
     @root = root
     raise unless File.directory?(@root)
+    @name = File.basename(@root)
     @path = self.make_path
     FileUtils.mkdir_p(@path[:output])
 
@@ -153,7 +142,7 @@ class Site
     @files[:sass]   = Dir[@path[:sass]]
   end
   attr_reader :root, :path, :title, :desc, :tags, :keywords, :author, :header
-  attr_reader :body, :styles, :files
+  attr_reader :body, :styles, :files, :name
   alias description desc
 
   def site_template
@@ -180,14 +169,8 @@ class Site
     end
   end
 
-  def to_s
-    <<-DISPLAY
-    Site: #{self.title}
-    Desc.: #{self.description}
-    Keywords: #{self.keywords}
-    Author: #{self.author}
-    Styles: #{self.styles}
-    DISPLAY
+  def rel(path)
+    path[/^.*(#{@name}.*)$/, 1] || path
   end
 
 end
@@ -219,14 +202,14 @@ class Engine
     @template = root("templates/#{mode}.html.erb")
     @cache = {}
   end
-  attr_reader :pages
+  attr_reader :pages, :output
 
   def read(file)
     @cache[file] ||= File.open(file, 'r') {|f| f.read }
   end
 
   def evaluate_erb(file, env)
-    msg "Evaluating ERB file '#{file}' ..."
+    dbg "Evaluating ERB file: #{@site.rel(file)}"
     data = self.read(file)
     box = Sandbox.new(env)
     erb = ERB.new(data)
@@ -234,21 +217,21 @@ class Engine
   end
 
   def evaluate_md(file)
-    msg "Evaluating Markdown file '#{file}' ..."
+    dbg "Evaluating Markdown file: #{@site.rel(file)}"
     data = self.read(file)
     doc = Maruku.new(data)
     doc.to_html
   end
 
   def evaluate_wiki(file)
-    msg "Evaluating MediaWiki markup file '#{file}' ..."
+    dbg "Evaluating MediaWiki markup file: #{@site.rel(file)}"
     data = self.read(file)
     doc = WikiCloth::Parser.new(:data => data)
     doc.to_html
   end
 
   def render_page(page)
-    msg "Rendering page #{page} ..."
+    dbg "Rendering page: #{@site.rel(page)}"
     type  = page[/\.(.+)\.page$/, 1]
     @page = case type
     when 'md'
@@ -270,12 +253,12 @@ class Engine
 
   def copy_resources
     unless @site.files[:images].empty?
-      msg "Copying image directory: #{@site.path[:images]} -> #{@output}"
+      dbg "Copying image directory: #{@site.rel(@site.path[:images])} -> #{@site.rel(@output)}"
       FileUtils.cp_r(@site.path[:images], @output)
     end
 
     unless @site.files[:css].empty?
-      msg "Copying style sheets: #{@site.css.join(', ')} -> #{@output}"
+      dbg "Copying style sheets: #{@site.css.join(', ')} -> #{@site.rel(@output)}"
       FileUtils.cp_r(@site.css, @output)
     end
 
@@ -286,20 +269,19 @@ class Engine
 
       # Only render if output doesn't already exist, or if output is outdated
       if !File.exist?(css) || File.mtime(sass) > File.mtime(css)
-        msg "Rendering SASS file '#{sass}' to '#{css}'"
+        dbg "Rendering SASS file '#{@site.rel(sass)}' to '#{@site.rel(css)}'"
         `sass -t compressed #{sass} #{css}`
       end
     end
   end
 
   def write_page(page)
-    msg "Writing page #{page} ..."
+    msg "Writing page: #{@site.rel(page)}"
     base = File.basename(page)
     name = base[/(.+)\..+?\.page$/, 1]
     out = File.join(@output, "#{name}.html")
     self.render_page(page) unless @pages[page]
     File.open(out, 'w') {|f| f.write(@pages[page]) }
-    puts
   end
 
   def write_site
@@ -316,26 +298,34 @@ end
 
 
 class Interface
-  def self.run
-    if ARGV[0]
-      if Conf[:plugin]
-        plugins = Conf[:plugin].split(',')
-        plugins.each do |plugin|
-          name = File.basename(plugin).sub(/\.[^\.]+?$/,'').capitalize
-          load plugin
-          klass = eval "ARKWEB::#{name}"
-          ARKWEB.register_plugin(klass)
-        end
-      end
-      site = AW::Site.new(ARGV[0])
-      eng  = AW::Engine.new(site)
 
+# TODO
+#  def self.load_plugins
+#    if Conf[:plugin]
+#      plugins = Conf[:plugin].split(',')
+#      plugins.each do |plugin|
+#        name = File.basename(plugin).sub(/\.[^\.]+?$/,'').capitalize
+#        load plugin
+#        klass = eval "ARKWEB::#{name}"
+#        ARKWEB.register_plugin(klass)
+#      end
+#    end
+#  end
+
+  def self.run
+    msg Version
+    path = ARGV[0]
+    if path
+      msg "Processing site: #{path}"
+      site = Site.new(path)
+      eng  = Engine.new(site)
       eng.write_site
-      msg "Done!"
+      msg "Done! Wrote site to: #{eng.output}"
     else
-      msg "Please supply a path to a site directory"
+      wrn "Please supply a path to a site directory"
     end
   end
+
 end
 
 
@@ -345,4 +335,5 @@ end # module ARKWEB
 
 
 AW = ARKWEB
+include AW::Util
 
