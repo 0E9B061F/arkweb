@@ -20,6 +20,13 @@ end
 
 module ARKWEB
 
+
+
+class BrokenSiteError < StandardError
+end
+
+
+
 Root = File.absolute_path(File.join(File.dirname(__FILE__), '..'))
 
 Project = YAML.load_file(File.join(Root, 'project.yaml'))
@@ -131,7 +138,12 @@ class Site
   end
 
   def load_header
-    YAML.load_file(self.path[:header])
+    begin
+      YAML.load_file(self.path[:header])
+    rescue
+      raise BrokenSiteError,
+      "While loading site '#{self.root}': header file '#{@path[:header]}' is missing or malformed."
+    end
   end
 
   def to_s
