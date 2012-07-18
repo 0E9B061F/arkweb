@@ -1,4 +1,5 @@
 ---
+author: nn
 name: ARKWEB-3
 description: A simple document processor; processes pages and applies templates, creating a flat HTML website.
 version: 0.1
