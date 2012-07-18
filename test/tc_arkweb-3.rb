@@ -31,6 +31,8 @@ class TestCaseARKWEB < Test::Unit::TestCase
 
     site = AW::Site.new('test/site')
     assert_head(site, :title, :desc, :author, :tags)
+    assert site.description == site.desc
+    assert site.keywords == site.tags.join(', ')
   end
 
   # Test page rendering with each format

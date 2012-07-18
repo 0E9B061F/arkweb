@@ -102,8 +102,8 @@ class Site
     @header = self.load_header
     @author = @header['author']
     @title  = @header['title']
-    @desc   = @header['desc']
-    @tags   = @header['tags']
+    @desc   = @header['desc'] || @header['description']
+    @tags   = @header['tags'] || @header['keywords']
     @keywords = @tags ? @tags.join(', ') : ''
 
     @styles = @header['styles']
