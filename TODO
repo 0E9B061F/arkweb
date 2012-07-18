@@ -1,3 +1,6 @@
 * Make `maruku` and `wikicloth` optional dependencies.
 * Make `wikicloth` PKGBUILD available on the AUR to satisfy dependencies.
-
+* YAML head matter for pages, ala Jekyll
+* Nested site structure like :category/:page/ (where page is a markup file or a
+  directory containing representable files)
+* Automatic file representation (ala ARKWEB1 & ARKWEB2)
