@@ -30,7 +30,7 @@ page to render.
       header.yaml   -- Required. Contains site metadata. Required fields are `title`,
                        `author`, `tags` and `desc`
       site.html.erb -- Optional. This template is rendered around each page
-                       template.
+                       template. The body data is stored in the variable `@body'
       page.html.erb -- Required. This template is rendered around each page. The page data
                        is stored in the variable `@page`
       img/*         -- Optional. Any images to be used in the site
