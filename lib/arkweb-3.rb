@@ -20,15 +20,20 @@ end
 
 module ARKWEB
 
-Root    = File.absolute_path(File.join(File.dirname(__FILE__), '..'))
+Root = File.absolute_path(File.join(File.dirname(__FILE__), '..'))
+
 Project = YAML.load_file(File.join(Root, 'project.yaml'))
-Version = "#{Project['name']} v#{Project['version']} codename '#{Project['codename']}'"
-Usage   = <<-BANNER
+Pr = Project
+Version = "#{Pr['name']} v#{Pr['version']} codename '#{Pr['codename']}'"
+
+Usage = <<-BANNER
 >>> #{Version}
     Copyright 2012 nn <nn@studio25.org>
-#{Project['name']} is a simple document processor for rendering flat websites.
+#{Pr['name']} is a simple document processor for rendering flat websites.
 USAGE: ark [options] SITEPATH
 BANNER
+
+
 
 Conf = Trollop.options do
   version Version
@@ -46,8 +51,12 @@ Conf = Trollop.options do
     :default => nil
 end
 
+
+
 class Plugin
 end
+
+
 
 class Timer
   def self.reset
@@ -59,6 +68,8 @@ class Timer
   end
   reset
 end
+
+
 
 class Site
 
@@ -82,14 +93,17 @@ class Site
     FileUtils.mkdir_p(@path[:output])
 
     @header = self.load_header
-    @title       = @header['title']
-    @description = @header['description']
-    @keywords    = @header['keywords'].join(', ')
-    @author      = @header['author']
+    @author = @header['author']
+    @title  = @header['title']
+    @desc   = @header['desc']
+    @tags   = @header['tags']
+    @keywords = @tags ? @tags.join(', ') : ''
 
     @styles = @header['styles']
-    webfonts = Webfont + @header['webfonts'].join('|')
-    @styles << webfonts
+    if @header['webfonts']
+      webfonts = Webfont + @header['webfonts'].join('|')
+      @styles << webfonts
+    end
 
     @files = {}
     @files[:pages]  = Dir[@path[:pages]]
@@ -97,8 +111,9 @@ class Site
     @files[:css]    = Dir[@path[:css]]
     @files[:sass]   = Dir[@path[:sass]]
   end
-  attr_reader :root, :path, :title, :description, :keywords, :author, :header
+  attr_reader :root, :path, :title, :desc, :tags, :keywords, :author, :header
   attr_reader :body, :styles, :files
+  alias description desc
 
   def site_template
     @path[:site_erb]
@@ -132,6 +147,7 @@ class Site
 end
 
 
+
 class Sandbox
   def initialize(env)
     env.each do |k,v|
@@ -142,6 +158,7 @@ class Sandbox
     binding
   end
 end
+
 
 
 class Engine
@@ -156,6 +173,7 @@ class Engine
     @template = root("templates/#{mode}.html.erb")
     @cache = {}
   end
+  attr_reader :pages
 
   def read(file)
     @cache[file] ||= File.open(file, 'r') {|f| f.read }
@@ -249,6 +267,8 @@ class Engine
 
 end
 
+
+
 class Interface
   def self.run
     if ARGV[0]
@@ -272,7 +292,11 @@ class Interface
   end
 end
 
+
+
 end # module ARKWEB
+
+
 
 AW = ARKWEB
 
