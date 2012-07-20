@@ -1,7 +1,7 @@
 # Maintainer: ennen <nn at studio25 dot org>
 pkgname=ruby-arkweb-3
 _gemname=${pkgname#ruby-}
-pkgver=0.1.0
+pkgver=<%= @version %>
 pkgrel=1
 pkgdesc="A simple document processor suitable for building flat websites."
 arch=(any)
@@ -10,7 +10,7 @@ license=('GPL')
 depends=('ruby' 'ruby-maruku' 'ruby-wikicloth' 'ruby-trollop')
 source=("${_gemname}-${pkgver}.gem")
 noextract=("${_gemname}-${pkgver}.gem")
-md5sums=('4f83a7208890d230780874c74138651d')
+<%= @md5 %>
 
 package() {
   cd "$srcdir"

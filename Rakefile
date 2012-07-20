@@ -3,6 +3,7 @@ require 'rdoc/task'
 require 'rubygems/package_task'
 require 'rspec/core/rake_task'
 require 'fileutils'
+require 'erb'
 
 load 'lib/arkweb-3.rb'
 
@@ -53,6 +54,14 @@ task :build => :gem do
 end
 
 task :pack => :build do
-  system('makepkg -f')
+  @version = "#{AW::Pr['version']}.0"
+  @md5 = `makepkg -g 2> /dev/null`
+  File.open('PKGBUILD.erb', 'r') do |f|
+    erb = ERB.new(f.read)
+    pb = erb.result(binding)
+    File.open('PKGBUILD', 'w') {|o| o.write(pb) }
+  end
+  system('makepkg -fc')
+  system('makepkg -f --source')
 end
 
