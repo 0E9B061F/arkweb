@@ -3,4 +3,5 @@ Gemfile.lock
 pkg/
 *.gem
 *.pkg.tar.*
+*.src.tar.*
 PKGBUILD
