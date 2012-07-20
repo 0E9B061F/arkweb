@@ -5,3 +5,4 @@ pkg/
 *.pkg.tar.*
 *.src.tar.*
 PKGBUILD
+test/site/html
