@@ -118,7 +118,6 @@ class Site
 
   def initialize(root)
     @root = root
-    raise unless File.directory?(@root)
     @name = File.basename(@root)
     @path = self.make_path
     FileUtils.mkdir_p(@path[:output])
@@ -330,12 +329,18 @@ class Interface
   def self.run
     msg Version
     path = ARGV[0]
-    if path
+    if path && File.directory?(path)
       msg "Processing site: #{path}"
       site = Site.new(path)
       eng  = Engine.new(site)
       eng.write_site
       msg "Done! Wrote site to: #{eng.output}"
+    elsif path && !File.exist?(path)
+      msg "Initializing site: #{path}"
+      FileUtils.mkdir_p(path)
+      target = root('skel', '*')
+      FileUtils.cp_r(Dir[target], path)
+      msg "Done! Initialized site: #{path}"
     else
       wrn "Please supply a path to a site directory"
     end
