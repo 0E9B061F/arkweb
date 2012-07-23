@@ -2,6 +2,6 @@
 author: nn
 name: ARKWEB-3
 description: A simple document processor; processes pages and applies templates, creating a flat HTML website.
-version: 0.1
+version: 0.2
 codename: Fourmonths Today
 
