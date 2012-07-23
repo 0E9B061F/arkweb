@@ -4,12 +4,13 @@ require 'fileutils'
 require 'yaml'
 require 'erb'
 
-require 'maruku'
-require 'wikicloth'
 require 'trollop'
+
 
 module ARKWEB
 
+
+Gem = {}
 
 
 # Utility functions and classes
@@ -235,7 +236,17 @@ class Engine
     type  = page[/\.(.+)\.page$/, 1]
     @page = case type
     when 'md'
+      unless Gem['maruku']
+        wrn "Skipped rendering Markdown page #{page}; please install gem 'maruku'"
+        return false
+      end
       self.evaluate_md(page)
+    when 'wiki'
+      unless Gem['wikicloth']
+        wrn "Skipped rendering wiki page #{page}; please install gem 'wikicloth'"
+        return false
+      end
+      self.evaluate_wiki(page)
     when 'erb'
       self.evaluate_erb(page, :site => @site)
     else
@@ -249,6 +260,7 @@ class Engine
       self.evaluate_erb(@template, :site => @site, :body => @body)
     end
     @body = ''
+    return true
   end
 
   def copy_resources
@@ -280,8 +292,11 @@ class Engine
     base = File.basename(page)
     name = base[/(.+)\..+?\.page$/, 1]
     out = File.join(@output, "#{name}.html")
-    self.render_page(page) unless @pages[page]
-    File.open(out, 'w') {|f| f.write(@pages[page]) }
+    unless @pages[page]
+      if self.render_page(page)
+        File.open(out, 'w') {|f| f.write(@pages[page]) }
+      end
+    end
   end
 
   def write_site
@@ -336,4 +351,18 @@ end # module ARKWEB
 
 AW = ARKWEB
 include AW::Util
+
+AW::Gem['maruku'] = begin
+  require 'maruku'
+rescue LoadError
+  wrn "Unable to load gem 'maruku'; markdown rendering will be disabled."
+  false
+end
+
+AW::Gem['wikicloth'] = begin
+  require 'wikicloth'
+rescue LoadError
+  wrn "Unable to load gem 'wikicloth'; wiki markup rendering will be disabled."
+  false
+end
 
