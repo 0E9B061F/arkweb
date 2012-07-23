@@ -14,6 +14,7 @@ RSpec::Core::RakeTask.new 'spec' do |t|
 end
 
 spec = Gem::Specification.new do |s|
+  puts " GEM BUILD ".ljust(80, '=')
   s.name = AW::Project['name'].downcase
   s.version = "#{AW::Project['version']}.0"
   s.author      = 'Nathan Gifford'
@@ -55,13 +56,23 @@ end
 
 task :pack => :build do
   @version = "#{AW::Pr['version']}.0"
-  @md5 = `makepkg -g 2> /dev/null`
+  @md5 = `makepkg -g`
+
+  puts "\n PKGBUILD ".ljust(80, '=')
   File.open('PKGBUILD.erb', 'r') do |f|
     erb = ERB.new(f.read)
     pb = erb.result(binding)
     File.open('PKGBUILD', 'w') {|o| o.write(pb) }
   end
+
+  puts "\n MAKEPKG ".ljust(80, '=')
   system('makepkg -fc')
+
+  puts "\n TAURBALL ".ljust(80, '=')
   system('makepkg -f --source')
+
+  puts "\n NAMCAP ".ljust(80, '=')
+  system('namcap PKGBUILD')
+  system("namcap ruby-arkweb-3-#{@version}-1-any.pkg.tar.xz")
 end
 
