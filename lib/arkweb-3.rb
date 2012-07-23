@@ -270,8 +270,8 @@ class Engine
     end
 
     unless @site.files[:css].empty?
-      dbg "Copying style sheets: #{@site.css.join(', ')} -> #{@site.rel(@output)}"
-      FileUtils.cp_r(@site.css, @output)
+      dbg "Copying style sheets: #{@site.files[:css].join(', ')} -> #{@site.rel(@output)}"
+      FileUtils.cp_r(@site.files[:css], @output)
     end
 
     # Run sass over sass files
