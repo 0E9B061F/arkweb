@@ -1,0 +1,10 @@
+<p>
+This is an example page in ERB. The Site instance is available as @site.
+</p>
+
+<p>
+Site title: <%= @site.title %><br/>
+Site desc.: <%= @site.desc %><br/>
+Site author: <%= @site.author %><br/>
+</p>
+

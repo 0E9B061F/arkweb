@@ -1,0 +1,8 @@
+== Foo! ==
+
+''Hello'', dear '''ARKWEB''' user! This is an example page in the MediaWiki
+markup language.
+
+Rendering this example requires the optional dependancy ''wikicloth''; this page
+will be skipped if the gem is not installed.
+

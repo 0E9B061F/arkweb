@@ -1,0 +1,7 @@
+## Markdown
+
+This is an __ARKWEB__ example page written in Markdown.
+
+Parsing Markdown requires the optional dependency 'maruku'; this page will be
+skipped if you haven't installed maruku.
+
