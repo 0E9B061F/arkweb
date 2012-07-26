@@ -22,23 +22,32 @@ class Helper
   def return
     Dir.chdir(@home)
   end
-  def gem_version
+  def long_version
     "#{@git_version[1..-1]}.0"
   end
+  def gem_name
+    AW::Project['name'].downcase
+  end
+  def gem_version
+    "#{self.gem_name}-#{self.long_version}"
+  end
+  def pkg_name
+    "ruby-#{self.gem_name}"
+  end
   def pkg_version
-    "#{AW::Project['name'].downcase}-#{self.gem_version}"
+    "#{self.pkg_name}-#{self.long_version}"
   end
   def version_dir
-    File.join(self.home, 'v', self.gem_version)
+    File.join(self.home, 'v', self.long_version)
   end
   def gem
-    "#{self.pkg_version}.gem"
+    "#{self.gem_version}.gem"
   end
   def pkg
-    "ruby-#{self.pkg_version}-1-any.pkg.tar.xz"
+    "#{self.pkg_version}-1-any.pkg.tar.xz"
   end
   def src
-    "ruby-#{self.pkg_version}-1.src.tar.gz"
+    "#{self.pkg_version}-1.src.tar.gz"
   end
   def gem_file
     File.join(H.version_dir, self.gem)
@@ -73,7 +82,7 @@ end
 
 spec = Gem::Specification.new do |s|
   s.name = AW::Project['name'].downcase
-  s.version = H.gem_version
+  s.version = H.long_version
   s.author      = 'nn'
   s.email       = 'nn@studio25.org'
   s.description = 'ARKWEB the _inscrutable_ ,
@@ -95,7 +104,7 @@ end
 Rake::RDocTask.new do |rd|
   rd.main       = 'README'
   rd.rdoc_dir   = 'doc'
-  rd.title      = "ARKWEB #{H.gem_version} '#{AW::Project['codename']}'"
+  rd.title      = "ARKWEB #{H.long_version} '#{AW::Project['codename']}'"
   rd.rdoc_files = Dir['bin/*'] + Dir['lib/*']
 end
 
@@ -135,7 +144,7 @@ end
 desc "Generate a PKGBUILD for the latest version, to be used with makepkg"
 task :pkgbuild do
   puts "\n Generating PKGBUILD ".ljust(80, '=')
-  @version = H.gem_version
+  @version = H.long_version
   FileUtils.cp('PKGBUILD.erb','PKGBUILD')
   File.open('PKGBUILD.erb', 'r') do |f|
     erb = ERB.new(f.read)
@@ -178,5 +187,14 @@ task :pack => [:buildgem, :makepkg, :aur, :namcap] do
   FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true)
   FileUtils.ln_s(H.gem_file, H.gem_link, :force => true)
   FileUtils.ln_s(H.src_file, H.src_link, :force => true)
+end
+
+desc "Uninstall arkweb if installed"
+task :uninstall do
+  system("pacman -Q #{H.pkg_name} && sudo pacman -Rdd #{H.pkg_name}")
+end
+desc "Install pacman package, according to the version env variable"
+task :install do
+  system("sudo pacman -U #{H.pkg_file}")
 end
 
