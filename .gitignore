@@ -6,3 +6,4 @@ pkg/
 *.src.tar.*
 PKGBUILD
 test/site/html
+v/

@@ -63,8 +63,10 @@ end
 
 
 Root = File.absolute_path(File.join(File.dirname(__FILE__), '..'))
+ProjectFile = File.join(Root, 'project.yaml')
+FreezeFile  = File.join(Root, 'freeze.yaml')
 
-Project = YAML.load_file(File.join(Root, 'project.yaml'))
+Project = YAML.load_file( File.exist?(FreezeFile) ? FreezeFile : ProjectFile )
 Pr = Project
 Version = "#{Pr['name']} v#{Pr['version']} codename '#{Pr['codename']}'"
 
