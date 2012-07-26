@@ -78,7 +78,6 @@ set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.i
 set tabstop=2
 set textwidth=80
 set viminfo=!,'100,<50,s10,h
-set window=33
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -91,13 +90,13 @@ badd +70 lib/arkweb-3.rb
 badd +1 bin/ark
 badd +1 test/tc_arkweb-3.rb
 badd +1 README
-badd +1 TODO
-badd +29 Rakefile
+badd +8 Rakefile
 badd +1 Gemfile
 badd +5 project.yaml
-badd +0 .gitignore
+badd +10 .gitignore
+badd +0 CHANGELOG
 args lib/arkweb-3.rb bin/ark test/tc_arkweb-3.rb README TODO Rakefile Gemfile
-edit .gitignore
+edit CHANGELOG
 set splitbelow splitright
 wincmd _ | wincmd |
 split
@@ -107,8 +106,8 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 1 + 17) / 34)
-exe '2resize ' . ((&lines * 30 + 17) / 34)
+exe '1resize ' . ((&lines * 1 + 17) / 35)
+exe '2resize ' . ((&lines * 31 + 17) / 35)
 argglobal
 enew
 file -MiniBufExplorer-
@@ -118,9 +117,9 @@ nnoremap <buffer> 	 :call search('\[[0-9]*:[^\]]*\]'):<BS>
 nnoremap <buffer> j gj
 nnoremap <buffer> k gk
 nnoremap <buffer> p :wincmd p:<BS>
-nnoremap <buffer> <Down> gj
-nnoremap <buffer> <Up> gk
 nnoremap <buffer> <S-Tab> :call search('\[[0-9]*:[^\]]*\]','b'):<BS>
+nnoremap <buffer> <Up> gk
+nnoremap <buffer> <Down> gj
 let &cpo=s:cpo_save
 unlet s:cpo_save
 setlocal keymap=
@@ -226,7 +225,7 @@ setlocal wrap
 setlocal wrapmargin=0
 wincmd w
 argglobal
-edit .gitignore
+edit CHANGELOG
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -329,16 +328,16 @@ set nowrap
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 9 - ((8 * winheight(0) + 15) / 30)
+let s:l = 20 - ((19 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-9
-normal! 01l
+20
+normal! 0
 wincmd w
 2wincmd w
-exe '1resize ' . ((&lines * 1 + 17) / 34)
-exe '2resize ' . ((&lines * 30 + 17) / 34)
+exe '1resize ' . ((&lines * 1 + 17) / 35)
+exe '2resize ' . ((&lines * 31 + 17) / 35)
 tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
