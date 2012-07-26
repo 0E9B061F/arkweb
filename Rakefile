@@ -7,26 +7,65 @@ require 'erb'
 
 load 'lib/arkweb-3.rb'
 
+
+
 class Helper
   def initialize
     @home = Dir.pwd
+    @git_version = ENV['version'] || `git tag`.lines.select {|l| l[/^v\d\.\d$/] }.last.strip
+    @git_series  = `git tag`.lines.select {|l| l[/^series-/] }.last.strip
   end
-  attr_reader :home
+  attr_reader :home, :git_version, :git_series
   def name
     File.basename(@home)
   end
   def return
     Dir.chdir(@home)
   end
+  def gem_version
+    "#{@git_version[1..-1]}.0"
+  end
+  def pkg_version
+    "#{AW::Project['name'].downcase}-#{self.gem_version}"
+  end
+  def version_dir
+    File.join(self.home, 'v', self.gem_version)
+  end
+  def gem
+    "#{self.pkg_version}.gem"
+  end
+  def pkg
+    "ruby-#{self.pkg_version}-1-any.pkg.tar.xz"
+  end
+  def src
+    "ruby-#{self.pkg_version}-1.src.tar.gz"
+  end
+  def gem_file
+    File.join(H.version_dir, self.gem)
+  end
+  def pkg_file
+    File.join(H.version_dir, self.pkg)
+  end
+  def src_file
+    File.join(H.version_dir, self.src)
+  end
+  def gem_link
+    File.join(self.home, 'v', 'gem')
+  end
+  def pkg_link
+    File.join(self.home, 'v', 'pkg')
+  end
+  def src_link
+    File.join(self.home, 'v', 'src')
+  end
+
+  def set_version(v)
+    @git_version = v
+  end
 end
-Help = Helper.new
+H = Helper.new
 
 
-GitVersion = `git tag`.lines.select {|l| l[/^v\d\.\d$/] }.last.strip
-GitSeries  = `git tag`.lines.select {|l| l[/^series-/] }.last.strip
-GemVersion = "#{GitVersion[1..-1]}.0"
-PkgVersion = "#{AW::Project['name'].downcase}-#{GemVersion}"
-VersionDir = File.join(Help.home, 'v', GemVersion)
 
 RSpec::Core::RakeTask.new 'spec' do |t|
   t.pattern = './spec/*.rb'
@@ -34,7 +73,7 @@ end
 
 spec = Gem::Specification.new do |s|
   s.name = AW::Project['name'].downcase
-  s.version = GemVersion
+  s.version = H.gem_version
   s.author      = 'nn'
   s.email       = 'nn@studio25.org'
   s.description = 'ARKWEB the _inscrutable_ ,
@@ -56,7 +95,7 @@ end
 Rake::RDocTask.new do |rd|
   rd.main       = 'README'
   rd.rdoc_dir   = 'doc'
-  rd.title      = "ARKWEB #{GemVersion} '#{AW::Project['codename']}'"
+  rd.title      = "ARKWEB #{H.gem_version} '#{AW::Project['codename']}'"
   rd.rdoc_files = Dir['bin/*'] + Dir['lib/*']
 end
 
@@ -69,19 +108,19 @@ end
 
 desc "Clone a temporary working repository and checkout latest version"
 task :checkout do
-  puts "\n Cloning checkout version #{GitVersion} ".ljust(80, '=')
+  puts "\n Cloning checkout version #{H.git_version} ".ljust(80, '=')
   Dir.chdir('/tmp')
-  FileUtils.rm_r(Help.name) if File.directory?(Help.name)
-  `git clone #{Help.home}`
-  Dir.chdir(Help.name)
-  `git checkout #{GitVersion}`
+  FileUtils.rm_r(H.name) if File.directory?(H.name)
+  `git clone #{H.home}`
+  Dir.chdir(H.name)
+  `git checkout #{H.git_version}`
 end
 
 desc "Freeze version info"
 task :freeze do
   pr = YAML.load_file('project.yaml')
-  pr['version']  = GitVersion
-  pr['codename'] = GitSeries
+  pr['version']  = H.git_version
+  pr['codename'] = H.git_series
   File.open('freeze.yaml', 'w') do |f|
     YAML.dump(pr, f)
   end
@@ -90,13 +129,13 @@ end
 desc "Clone a temporary work area, checkout the latest version, freeze version info and build the gem"
 task :buildgem => [:checkout, :freeze, :gem] do
   puts "\n Building gem and copying to . ".ljust(80, '=')
-  FileUtils.mv("pkg/#{AW::Project['name'].downcase}-#{GemVersion}.gem", '.')
+  FileUtils.mv("pkg/#{H.gem}", '.')
 end
 
 desc "Generate a PKGBUILD for the latest version, to be used with makepkg"
 task :pkgbuild do
   puts "\n Generating PKGBUILD ".ljust(80, '=')
-  @version = GemVersion
+  @version = H.gem_version
   FileUtils.cp('PKGBUILD.erb','PKGBUILD')
   File.open('PKGBUILD.erb', 'r') do |f|
     erb = ERB.new(f.read)
@@ -127,17 +166,17 @@ desc "Scan generated PKGBUILD and .pkg. using namcap"
 task :namcap do
   puts "\n NAMCAP ".ljust(80, '=')
   system('namcap PKGBUILD')
-  system("namcap ruby-#{PkgVersion}-1-any.pkg.tar.xz")
+  system("namcap #{H.pkg}")
 end
 
 desc "Perform full packaging task, producing a gem, Arch Linux pkg and AUR src tar."
 task :pack => [:buildgem, :makepkg, :aur, :namcap] do
-  gem = "#{PkgVersion}.gem"
-  pkg = "ruby-#{PkgVersion}-1-any.pkg.tar.xz"
-  src = "ruby-#{PkgVersion}-1.src.tar.gz"
-  FileUtils.rm_r(VersionDir) if File.directory?(VersionDir)
-  FileUtils.mkdir_p(VersionDir)
-  FileUtils.cp([pkg, src, gem], VersionDir)
-  Help.return
+  FileUtils.rm_r(H.version_dir) if File.directory?(H.version_dir)
+  FileUtils.mkdir_p(H.version_dir)
+  FileUtils.cp([H.pkg, H.src, H.gem], H.version_dir)
+  H.return
+  FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true)
+  FileUtils.ln_s(H.gem_file, H.gem_link, :force => true)
+  FileUtils.ln_s(H.src_file, H.src_link, :force => true)
 end
 
