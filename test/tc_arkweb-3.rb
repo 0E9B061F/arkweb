@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'test/unit'
 load 'lib/arkweb-3.rb'
 
@@ -37,14 +39,23 @@ class TestCaseARKWEB < Test::Unit::TestCase
 
   # Test page rendering with each format
   def test_render_page
-    # test ERB
     site = AW::Site.new('test/site')
     eng  = AW::Engine.new(site)
-    eng.render_page('test/site/test.erb.page')
-    assert eng.pages['test/site/test.erb.page']
+
+    # test ERB
+    eng.render_page('test/site/test-erb.erb.page')
+    assert eng.pages['test/site/test-erb.erb.page']
+    assert eng.pages['test/site/test-erb.erb.page'] == File.open('test/html/test-erb.html', 'r') {|f| f.read }
 
     # test md
+    eng.render_page('test/site/test-md.md.page')
+    assert eng.pages['test/site/test-md.md.page']
+    assert eng.pages['test/site/test-md.md.page'] == File.open('test/html/test-md.html', 'r') {|f| f.read }
+
     # test wiki
+    eng.render_page('test/site/test-wiki.wiki.page')
+    assert eng.pages['test/site/test-wiki.wiki.page']
+    assert eng.pages['test/site/test-wiki.wiki.page'] == File.open('test/html/test-wiki.html', 'r') {|f| f.read }
   end
 
 end
