@@ -1,11 +1,10 @@
 .sass-cache/
 Gemfile.lock
 Session.vim
+NOTES
 pkg/
-*.gem
-*.pkg.tar.*
-*.src.tar.*
 PKGBUILD
-test/site/html
+test/site/html/
 v/
 doc/
+test/site-init/
