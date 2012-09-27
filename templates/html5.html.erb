@@ -3,11 +3,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta content="IE=9" http-equiv="X-UA-Compatible" />
+    <% if @site.xuacompat %>
+    <meta content="<%= @site.xuacompat %>" http-equiv="X-UA-Compatible" />
+    <% end %>
 
     <title><%= @site.title %></title>
 
-    <meta name="description" content="<%= @site.description %>" />
+    <meta name="description" content="<%= @site.desc %>" />
     <meta name="keywords" content="<%= @site.keywords %>" />
     <meta name="author" content="<%= @site.author %>" />
 
