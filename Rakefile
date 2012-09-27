@@ -76,6 +76,12 @@ H = Helper.new
 
 
 
+def title(msg)
+  puts "\n=== #{msg} ".ljust(80, '-')
+end
+
+
+
 RSpec::Core::RakeTask.new 'spec' do |t|
   t.pattern = './spec/*.rb'
 end
@@ -117,12 +123,12 @@ end
 
 desc "Clone a temporary working repository and checkout latest version"
 task :checkout do
-  puts "\n Cloning checkout version #{H.git_version} ".ljust(80, '=')
+  title "Cloning checkout version #{H.git_version}"
   Dir.chdir('/tmp')
-  FileUtils.rm_r(H.name) if File.directory?(H.name)
-  `git clone #{H.home}`
+  FileUtils.rm_r(H.name, :verbose => true) if File.directory?(H.name)
+  sh "git clone #{H.home}"
   Dir.chdir(H.name)
-  `git checkout #{H.git_version}`
+  sh "git checkout #{H.git_version}"
 end
 
 desc "Freeze version info"
@@ -137,15 +143,15 @@ end
 
 desc "Clone a temporary work area, checkout the latest version, freeze version info and build the gem"
 task :buildgem => [:checkout, :freeze, :gem] do
-  puts "\n Building gem and copying to . ".ljust(80, '=')
-  FileUtils.mv("pkg/#{H.gem}", '.')
+  title "Building gem and copying to ."
+  FileUtils.mv("pkg/#{H.gem}", '.', :verbose => true)
 end
 
 desc "Generate a PKGBUILD for the latest version, to be used with makepkg"
 task :pkgbuild do
-  puts "\n Generating PKGBUILD ".ljust(80, '=')
+  title "Generating PKGBUILD"
   @version = H.long_version
-  FileUtils.cp('PKGBUILD.erb','PKGBUILD')
+  FileUtils.cp('PKGBUILD.erb','PKGBUILD', :verbose => true)
   File.open('PKGBUILD.erb', 'r') do |f|
     erb = ERB.new(f.read)
     pb = erb.result(binding)
@@ -161,40 +167,58 @@ end
 
 desc "Run makepkg, generating a .pkg. file for use with pacman"
 task :makepkg => :pkgbuild do
-  puts "\n MAKEPKG ".ljust(80, '=')
-  system('makepkg -fc')
+  title "MAKEPKG"
+  sh('makepkg -fc')
 end
 
 desc "Generate a source tar suitable for upload to the AUR"
 task :aur do
-  puts "\n TAURBALL ".ljust(80, '=')
-  system('makepkg -f --source')
+  title "TAURBALL"
+  sh('makepkg -f --source')
 end
 
 desc "Scan generated PKGBUILD and .pkg. using namcap"
 task :namcap do
-  puts "\n NAMCAP ".ljust(80, '=')
-  system('namcap PKGBUILD')
-  system("namcap #{H.pkg}")
+  title "NAMCAP"
+  sh('namcap PKGBUILD')
+  sh("namcap #{H.pkg}")
 end
 
-desc "Perform full packaging task, producing a gem, Arch Linux pkg and AUR src tar."
+desc "Perform full packaging task, producing a gem, a pacman package and AUR src tar."
 task :pack => [:buildgem, :makepkg, :aur, :namcap] do
-  FileUtils.rm_r(H.version_dir) if File.directory?(H.version_dir)
-  FileUtils.mkdir_p(H.version_dir)
-  FileUtils.cp([H.pkg, H.src, H.gem], H.version_dir)
+  title "Finishing package task. See #{H.version_dir}"
+  FileUtils.rm_r(H.version_dir, :verbose => true) if File.directory?(H.version_dir)
+  FileUtils.mkdir_p(H.version_dir, :verbose => true)
+  FileUtils.cp([H.pkg, H.src, H.gem], H.version_dir, :verbose => true)
   H.return
-  FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true)
-  FileUtils.ln_s(H.gem_file, H.gem_link, :force => true)
-  FileUtils.ln_s(H.src_file, H.src_link, :force => true)
+  FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true, :verbose => true)
+  FileUtils.ln_s(H.gem_file, H.gem_link, :force => true, :verbose => true)
+  FileUtils.ln_s(H.src_file, H.src_link, :force => true, :verbose => true)
 end
 
 desc "Uninstall arkweb if installed"
 task :uninstall do
-  system("pacman -Q #{H.pkg_name} && sudo pacman -Rdd #{H.pkg_name}")
+  sh("pacman -Q #{H.pkg_name} && sudo pacman -Rdd #{H.pkg_name}")
 end
 desc "Install pacman package, according to the version env variable"
 task :install do
-  system("sudo pacman -U #{H.pkg_file}")
+  sh("sudo pacman -U #{H.pkg_file}")
+end
+
+desc "Upload pkg to a repository"
+task :upload_pkg do
+  # TODO
+end
+desc "Upload src to the AUR"
+task :upload_src do
+  # TODO
+end
+desc "Upload gem to rubygems.org"
+task :upload_gem do
+  # TODO
+end
+
+task :genhtml do
+  # TODO regenerate reference HTML used in testing (using last version binary?)
 end
 
