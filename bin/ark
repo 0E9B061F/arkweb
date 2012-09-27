@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 
-load File.join(File.dirname(__FILE__), '../lib/arkweb-3.rb')
+require_relative '../lib/arkweb'
 
-AW::Interface.run
+
+
+ARKWEB::Interface.run(*ARGV)
 
