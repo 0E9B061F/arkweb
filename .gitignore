@@ -8,3 +8,4 @@ test/site/html/
 v/
 doc/
 test/site-init/
+.rspec
