@@ -4,4 +4,8 @@ desc: A site for testing ARKWEB
 tags: [foo, bar, baz]
 styles: [test.css]
 author: nn
+webfonts:
+  google: [Megrim, Pompiere]
+  fontsquirrel: [Kingthings-Versalis, Notice, lobster-two, Aquiline]
+xuacompat: IE=9
 
