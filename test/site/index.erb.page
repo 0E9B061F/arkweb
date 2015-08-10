@@ -1,0 +1,20 @@
+<p>Site title: <%= @site.title %></p>
+
+<p>Page count: <%= @site.pages.length %></p>
+
+<p>Sections: <%= @site.sections.length %></p>
+
+<p>Sections list:</p>
+<ul>
+	<% @site.sections.each do |path,sec| %>
+		<li><%= sec.title %> | <%= sec.pages.length %> pages</li>
+	<% end %>
+</ul>
+
+<p>Page list:</p>
+<ul>
+	<% @site.pages.each do |page| %>
+		<li><%= page.link_to() %></li>
+	<% end %>
+</ul>
+

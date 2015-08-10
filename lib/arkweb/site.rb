@@ -1,18 +1,73 @@
 module ARKWEB
+
+class Section
+	def initialize(site, path)
+		@site = site
+		@path = path
+		@pages = Dir[File.join(@path, Site::Types[:pages])].map {|path| Page.new(@site, path, self)}
+		@title = File.basename(@path).capitalize()
+	end
+	attr_reader :site, :path, :pages, :title
+
+	def page_count()
+		return @pages.length()
+	end
+end
+
+class Page
+	def initialize(site, path, section)
+		@site = site
+		@path = path
+		@relative = Pathname.new(@path).relative_path_from(Pathname.new(@site.root))
+		@relativedir = File.dirname(@relative)
+		@section = section
+    @base = File.basename(@path)
+    @name = @base[/(.+)\..+?\.page$/, 1]
+		@title = @name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
+		@html = "#{@name}.html"
+		@link = File.join(@relativedir, @html)
+    @out  = File.join(@site[:output], @link)
+		@out_dir = File.dirname(@out)
+    @type = @path[/\.(.+)\.page$/, 1]
+	end
+	attr_reader :site, :path, :section
+	attr_reader :base, :name, :out, :type
+	attr_reader :out_dir, :title, :relativedir
+	attr_reader :link
+
+	def link_to(**options)
+		text  = options[:text]  || @title
+		id    = options[:id]    || nil
+		klass = options[:class] || nil
+		id    = %Q( id="#{id}")       if id
+		klass = %Q( class="#{klass}") if klass
+		return %Q(<a#{id}#{klass} href="#{@link}">#{text}</a>)
+	end
+
+	def to_s()
+		return @path
+	end
+end
+
 class Site
 
-  Paths = {
-    :header   => "header.yaml",
+  Paths = {}
+	Paths[:arkweb]   = "ARKWEB"
+	Paths[:header]   = File.join(Paths[:arkweb], "header.yaml")
+	Paths[:page_erb] = File.join(Paths[:arkweb], "page.html.erb")
+	Paths[:site_erb] = File.join(Paths[:arkweb], "site.html.erb")
+	Paths[:output]   = File.join(Paths[:arkweb], "html")
+	Paths[:tmp]      = File.join(Paths[:arkweb], "tmp")
+	Paths[:cache]    = File.join(Paths[:arkweb], "cache")
+	Paths[:images]   = "img"
+
+	Types = {
     :pages    => "*.page",
-    :page_erb => "page.html.erb",
-    :site_erb => "site.html.erb",
-    :output   => "html",
+		:images   => "*.{jpg,jpeg,png,gif}",
     :sass     => "*.{scss,sass}",
-    :css      => "*.css",
-    :images   => "img",
-    :tmp      => "tmp",
-    :cache    => "cache"
-  }
+    :css      => "*.css"
+	}
+
   FontService = {
     :google => lambda {|fonts|
       url = 'http://fonts.googleapis.com/css?family='
@@ -68,10 +123,24 @@ class Site
     end
 
     @files = {}
-    @files[:pages]  = Dir[@paths[:pages]]
-    @files[:images] = Dir[@paths[:images]]
-    @files[:css]    = Dir[@paths[:css]]
-    @files[:sass]   = Dir[@paths[:sass]]
+    @files[:pages]  = Dir[File.join(@root, Types[:pages])]
+    @files[:images] = Dir[File.join(@paths[:images], Types[:images])]
+    @files[:css]    = Dir[File.join(@root, Types[:css])]
+    @files[:sass]   = Dir[File.join(@root, Types[:sass])]
+
+		# Return a list of sections, which are any subdirectories excluding special subdirectories
+		# The root directory is itself a section
+		# Each section will later be scanned for pages and media, and then rendered
+		subdirs = Dir[File.join(@root, '**/')].reject do |path|
+			path.start_with?(@paths[:arkweb], @paths[:images])
+		end
+		@sections = {}
+		@pages = []
+		subdirs.each do |path|
+			s = Section.new(self, path)
+			@sections[path] = s
+			@pages += s.pages
+		end
 
     [:output, :tmp, :images, :cache].each do |dir|
       FileUtils.mkdir_p(@paths[dir])
@@ -82,6 +151,7 @@ class Site
   attr_reader :root, :name, :paths
   attr_reader :author, :title, :desc, :tags, :keywords, :xuacompat
   attr_reader :webfonts, :styles, :files, :engine
+	attr_reader :pages, :sections
 
   private
 

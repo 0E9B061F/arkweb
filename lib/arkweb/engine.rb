@@ -58,16 +58,15 @@ class Engine
 
   def render_page(page)
     dbg "Rendering page: #{page}"
-    type  = page[/\.(.+)\.page$/, 1]
-    @page = case type
+    @page = case page.type
     when 'md'
-      self.evaluate_md(page)
+      self.evaluate_md(page.path)
     when 'wiki'
-      self.evaluate_wiki(page)
+      self.evaluate_wiki(page.path)
     when 'erb'
-      self.evaluate_erb(page, :site => @site)
+      self.evaluate_erb(page.path, :site => @site)
     else
-      self.read(page)
+      self.read(page.path)
     end
     @body = self.evaluate_erb(@site[:page_erb], :site => @site, :page => @page)
     @page = ''
@@ -146,19 +145,17 @@ class Engine
 
   def write_page(page)
     msg "Writing page: #{page}"
-    base = File.basename(page)
-    name = base[/(.+)\..+?\.page$/, 1]
-    out = File.join(@site[:output], "#{name}.html")
 
     unless @pages[page]
       if self.render_page(page)
-        File.open(out, 'w') {|f| f.write(@pages[page]) }
+      	FileUtils.mkdir_p(page.out_dir)
+        File.open(page.out, 'w') {|f| f.write(@pages[page]) }
       end
     end
 
     if Conf[:validate] && ARKWEB.optional_gem('w3c_validators')
-      result = @validator.validate_file(out)
-      msg "Validating file: #{out}"
+      result = @validator.validate_file(page.out)
+      msg "Validating file: #{page.out}"
       if result.errors.length > 0
         result.errors.each {|e| msg e.to_s }
       else
@@ -169,7 +166,7 @@ class Engine
 
   def write_site
     # self.run_before_hook
-    @site.files[:pages].each do |page|
+    @site.pages.each do |page|
       self.write_page(page)
     end
     self.copy_resources
