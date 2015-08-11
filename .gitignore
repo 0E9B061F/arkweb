@@ -1,11 +1,11 @@
 .sass-cache/
 Gemfile.lock
 Session.vim
-NOTES
 pkg/
 PKGBUILD
-test/site/html/
 v/
 doc/
 test/site-init/
 .rspec
+test/site/ARKWEB/html
+test/site/ARKWEB/cache
