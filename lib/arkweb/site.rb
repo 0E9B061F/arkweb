@@ -4,36 +4,89 @@ class Section
 	def initialize(site, path)
 		@site = site
 		@path = path
-		@pages = Dir[File.join(@path, Site::Types[:pages])].map {|path| Page.new(@site, path, self)}
+
+		# Get all pages in this section
+		page_glob = File.join(@path, Site::Types[:pages])
+		@pages = Dir[page_glob].map do |path|
+			Page.new(@site, path, self)
+		end
+
+		# Order pages by ctime and give them an index
+		@ordered_pages = @pages.sort {|a,b| a.ctime <=> b.ctime }
+		@ordered_pages.each_with_index do |page,i|
+			page.index = i + 1
+		end
+
+		# Get a title for this section
 		@title = File.basename(@path).capitalize()
+
+		# Path-related stuff
+		@relative = Pathname.new(@path).relative_path_from(Pathname.new(@site.root))
 	end
-	attr_reader :site, :path, :pages, :title
+	attr_reader :site, :path, :pages, :title, :ordered_pages
 
 	def page_count()
 		return @pages.length()
+	end
+
+	def link_to(**options)
+		text  = options[:text]  || @title
+		id    = options[:id]    || nil
+		klass = options[:class] || nil
+		id    = %Q( id="#{id}")       if id
+		klass = %Q( class="#{klass}") if klass
+		return %Q(<a#{id}#{klass} href="#{@relative}">#{text}</a>)
 	end
 end
 
 class Page
 	def initialize(site, path, section)
 		@site = site
+		@section = section
+
 		@path = path
+
+		@index = 0
+
+		@atime = File.atime(@path)
+		@ctime = File.ctime(@path)
+		@mtime = File.mtime(@path)
+
+		@text = File.open(@path, 'r') {|f| f.read }
+		if (md = @text.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m))
+			@contents = md.post_match
+			@metadata = YAML.load(md[:metadata])
+			@has_metadata = true
+		else
+			@contents = @text
+			@metadata = {}
+			@has_metadata = false
+		end
+
+    @base  = File.basename(@path)
+    @name  = @base[/(.+)\..+?\.page$/, 1]
+		@title = @metadata['title'] || @name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
+		@tags  = @metadata['keywords'] || @metadata['tags'] || []
+
 		@relative = Pathname.new(@path).relative_path_from(Pathname.new(@site.root))
 		@relativedir = File.dirname(@relative)
-		@section = section
-    @base = File.basename(@path)
-    @name = @base[/(.+)\..+?\.page$/, 1]
-		@title = @name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
+
 		@html = "#{@name}.html"
+
 		@link = File.join(@relativedir, @html)
+
     @out  = File.join(@site[:output], @link)
 		@out_dir = File.dirname(@out)
+
     @type = @path[/\.(.+)\.page$/, 1]
 	end
 	attr_reader :site, :path, :section
 	attr_reader :base, :name, :out, :type
 	attr_reader :out_dir, :title, :relativedir
 	attr_reader :link
+	attr_reader :contents, :has_metadata, :metadata
+	attr_reader :atime, :ctime, :mtime
+	attr_accessor :index
 
 	def link_to(**options)
 		text  = options[:text]  || @title

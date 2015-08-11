@@ -20,12 +20,20 @@ class Engine
     @pages = {}
     @template = root("templates/#{mode}.html.erb")
     @cache = {}
+
     if Conf[:validate] && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
     if Conf[:minify] && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
+    end
+
+		@page_erb = File.open(@site[:page_erb], 'r') {|f| f.read }
+    @site_erb = if File.exist?(@site[:site_erb])
+			File.open(@site[:site_erb], 'r') {|f| f.read }
+    else
+			File.open(@template, 'r') {|f| f.read }
     end
   end
   attr_reader :pages
@@ -34,47 +42,50 @@ class Engine
     @cache[file] ||= File.open(file, 'r') {|f| f.read }
   end
 
-  def evaluate_erb(file, env)
-    dbg "Evaluating ERB file: #{file}"
-    data = self.read(file)
+	# XXX this is here to handle rendering templates for now, since the other
+	# eval function are expecting page objects. should make a similar template
+	# object which follows the same interface.
+  def evaluate_erb_data(data, env)
+    dbg "Evaluating ERB template [XXX]"
     box = Sandbox.new(env)
     erb = ERB.new(data)
     erb.result(box.bindings)
   end
 
-  def evaluate_md(file)
-    return unless ARKWEB.optional_gem('rdiscount')
-    dbg "Evaluating Markdown file: #{file}"
-    data = self.read(file)
-    RDiscount.new(data).to_html
+  def evaluate_erb(page, env)
+    dbg "Evaluating ERB page: #{page}"
+    box = Sandbox.new(env)
+    erb = ERB.new(page.contents)
+    erb.result(box.bindings)
   end
 
-  def evaluate_wiki(file)
+  def evaluate_md(page)
+    return unless ARKWEB.optional_gem('rdiscount')
+    dbg "Evaluating Markdown page: #{page}"
+    RDiscount.new(page.contents).to_html
+  end
+
+  def evaluate_wiki(page)
     return unless ARKWEB.optional_gem('wikicloth')
-    dbg "Evaluating MediaWiki markup file: #{file}"
-    data = self.read(file)
-    WikiCloth::Parser.new(:data => data).to_html
+    dbg "Evaluating MediaWiki markup page: #{page}"
+    WikiCloth::Parser.new(:data => page.contents).to_html
   end
 
   def render_page(page)
     dbg "Rendering page: #{page}"
     @page = case page.type
     when 'md'
-      self.evaluate_md(page.path)
+      self.evaluate_md(page)
     when 'wiki'
-      self.evaluate_wiki(page.path)
+      self.evaluate_wiki(page)
     when 'erb'
-      self.evaluate_erb(page.path, :site => @site)
+      self.evaluate_erb(page, :site => @site)
     else
-      self.read(page.path)
+      page.contents
     end
-    @body = self.evaluate_erb(@site[:page_erb], :site => @site, :page => @page)
+    @body = self.evaluate_erb_data(@page_erb, :site => @site, :page => @page)
     @page = ''
-    @pages[page] = if File.exist?(@site[:site_erb])
-      self.evaluate_erb(@site[:site_erb], :site => @site, :body => @body)
-    else
-      self.evaluate_erb(@template, :site => @site, :body => @body)
-    end
+    @pages[page] = self.evaluate_erb_data(@site_erb, :site => @site, :body => @body)
     @body = ''
     return true
   end
@@ -137,7 +148,7 @@ class Engine
           end
           FileUtils.cp(Dir[File.join(font_cache, '*')], @site[:output])
         rescue => e
-          wrn "Failed getting Font Squirrel font '#{font}'\n#{e}"
+          wrn "Failed getting Font Squirrel font '#{font}'\n          #{e}"
         end
       end
     end
@@ -148,7 +159,9 @@ class Engine
 
     unless @pages[page]
       if self.render_page(page)
+				# Make sure the appropriate subdirectories exist in the output folder
       	FileUtils.mkdir_p(page.out_dir)
+				# Write the HTML file
         File.open(page.out, 'w') {|f| f.write(@pages[page]) }
       end
     end
