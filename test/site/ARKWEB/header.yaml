@@ -2,7 +2,7 @@
 title: Test Site
 desc: A site for testing ARKWEB
 tags: [foo, bar, baz]
-styles: [test.css]
+styles: [test.scss]
 author: nn
 webfonts:
   google: [Megrim, Pompiere]

@@ -103,3 +103,6 @@ module ARKWEB
 
 end # module ARKWEB
 
+
+AW = ARKWEB
+

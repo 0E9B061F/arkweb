@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8" />
     <% if @site.xuacompat %>
-    <meta content="<%= @site.xuacompat %>" http-equiv="X-UA-Compatible" />
+    	<meta content="<%= @site.xuacompat %>" http-equiv="X-UA-Compatible" />
     <% end %>
 
     <title><%= @site.title %></title>
@@ -13,9 +13,8 @@
     <meta name="keywords" content="<%= @site.keywords %>" />
     <meta name="author" content="<%= @site.author %>" />
 
-    <% @site.styles.each do |style| %>
-    <link href="<%= style %>" rel="stylesheet" type="text/css" />
-    <% end %>
+    <%= @site.link_styles %>
+    <%= @site.link_webfonts %>
   </head>
 
   <body>

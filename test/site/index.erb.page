@@ -1,20 +1,56 @@
-<p>Site title: <%= @site.title %></p>
+<table>
 
-<p>Page count: <%= @site.pages.length %></p>
+<tr>
+	<td class="label">Site title:</td>
+	<td><%= @site.title %></tr>
+</tr>
 
-<p>Sections: <%= @site.sections.length %></p>
+<tr>
+	<td class="label">Page count:</td>
+	<td><%= @site.pages.length %></td>
+</tr>
 
-<p>Sections list:</p>
-<ul>
-	<% @site.sections.each do |path,sec| %>
-		<li><%= sec.title %> | <%= sec.pages.length %> pages</li>
-	<% end %>
-</ul>
+<tr>
+	<td class="label">Sections:</td>
+	<td><%= @site.sections.length %></td>
+</tr>
 
-<p>Page list:</p>
-<ul>
-	<% @site.pages.each do |page| %>
-		<li><%= page.link_to() %></li>
-	<% end %>
-</ul>
+<tr>
+	<td class="label" colspan="2">Sections list:</td>
+</tr>
+
+<% @site.sections.each do |path,sec| %>
+	<tr class="list">
+		<td colspan="2"><%= sec.title %> | <%= sec.pages.length %> pages</td>
+	</tr>
+<% end %>
+
+<tr>
+<td class="label" colspan="2">Page list:</td>
+</tr>
+
+<% @site.pages.each do |page| %>
+	<tr class="list">
+		<td colspan="2"><%= page.link_to() %></td>
+	</tr>
+<% end %>
+
+<tr>
+<td class="label" colspan="2">Metadata:</td>
+</tr>
+
+<% @site.metadata.each do |k,v| %>
+	<% v = v.join(', ') if v.is_a?(Array) %>
+	<tr>
+		<td class="label"><%= k %></td>
+		<td><%= v %></td>
+	</tr>
+<% end %>
+
+<tr>
+<td>An image:</td>
+<td><%= @site.img("flueron.png") %></td>
+</tr>
+
+</table>
 

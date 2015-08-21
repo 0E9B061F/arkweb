@@ -1,10 +1,32 @@
 body {
   background-color: #efefef;
 }
+
 p {
   background-color: white;
   font-size: 2em;
 }
+
+table {
+	font-size: 1.2em;
+	width: 800px;
+	margin: 0 auto;
+}
+
+td {
+	background-color: white;
+}
+
+td.label {
+	font-size: 1.1em;
+	font-weight: bold;
+	background-color: #aaaaaa;
+}
+
+tr.list {
+	text-align: right;
+}
+
 .squirrel-1 {
   font-family: KingthingsVersalisRegular;
 }

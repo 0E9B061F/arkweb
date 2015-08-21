@@ -91,27 +91,29 @@ class Engine
   end
 
   def copy_resources
+		# Make sure the appropriate subdirectories exist in the output folder
+    FileUtils.mkdir_p(@site[:aw_out])
+    FileUtils.mkdir_p(@site[:img_out])
+
     unless @site.files[:images].empty?
-      dbg "Copying image directory: #{@site[:images]} -> #{@site[:output]}"
-      FileUtils.cp_r(@site[:images], @site[:output])
+      dbg "Copying image directory: #{@site[:images]} -> #{@site[:img_out]}"
+      FileUtils.cp_r(@site[:images], @site[:aw_out])
     end
 
-    unless @site.files[:css].empty?
-      dbg "Copying style sheets: #{@site.files[:css].join(', ')} -> #{@site[:output]}"
-      FileUtils.cp_r(@site.files[:css], @site[:output])
-    end
+		@site.styles.each do |style|
+			if style[/\.css$/]
+				FileUtils.cp(style, @site[:aw_out])
+			elsif style[/\.s[ca]ss$/]
+	      css = File.basename(style).sub(/\.[^\.]+$/, '.css')
+  	    css = File.join(@site[:aw_out], css)
 
-    # Run sass over sass files
-    @site.files[:sass].each do |sass|
-      css = File.basename(sass).sub(/\.[^\.]+$/, '.css')
-      css = File.join(@site[:output], css)
-
-      # Only render if output doesn't already exist, or if output is outdated
-      if !File.exist?(css) || File.mtime(sass) > File.mtime(css)
-        dbg "Rendering SASS file '#{sass}' to '#{css}'"
-        `sass -t compressed #{sass} #{css}`
-      end
-    end
+	      # Only render if output doesn't already exist, or if output is outdated
+	      if !File.exist?(css) || File.mtime(style) > File.mtime(css)
+	        dbg "Rendering SASS file '#{style}' to '#{css}'"
+	        `sass -t compressed #{style} #{css}`
+	      end
+			end
+		end
 
     if !@site.webfonts.empty? && ARKWEB.optional_gem('libarchive')
       @site.webfonts['fontsquirrel'].each do |font|

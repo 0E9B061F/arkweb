@@ -5,23 +5,32 @@ require 'rspec/core/rake_task'
 require 'fileutils'
 require 'erb'
 
-load 'lib/arkweb-3.rb'
+load 'lib/arkweb.rb'
 
 
 
 class Helper
   def initialize
     @home = Dir.pwd
-    @git_version = ENV['version'] || `git tag`.lines.select {|l| l[/^v\d\.\d$/] }.last.strip
-    @git_series  = `git tag`.lines.select {|l| l[/^series-/] }.last.strip
+    @git_version = ENV['version'] || `git tag`.lines.select {|l| l[/^v[\d\.]+$/] }.last.strip
+    @git_series  = `git tag`.lines.select {|l| l[/^codename-/] }.last.strip
   end
   attr_reader :home, :git_version, :git_series
+
   def name
     File.basename(@home)
   end
+	def version
+		@git_version
+	end
+	def codename
+		@git_series[/^codename-(.*)$/, 1].tr('-_', ' ').split.map(&:capitalize).join(' ')
+	end
+
   def return
     Dir.chdir(@home)
   end
+
   def long_version
     "#{@git_version[1..-1]}.0"
   end
@@ -40,6 +49,7 @@ class Helper
   def version_dir
     File.join(self.home, 'v', self.long_version)
   end
+
   def gem
     "#{self.gem_version}.gem"
   end
@@ -49,6 +59,7 @@ class Helper
   def src
     "#{self.pkg_version}-1.src.tar.gz"
   end
+
   def gem_file
     File.join(H.version_dir, self.gem)
   end
@@ -81,6 +92,10 @@ def title(msg)
 end
 
 
+desc "Report version information and exit"
+task :version do
+	puts "ARKWEB-3 #{H.version} codename '#{H.codename}'"
+end
 
 RSpec::Core::RakeTask.new 'spec' do |t|
   t.pattern = './spec/*.rb'

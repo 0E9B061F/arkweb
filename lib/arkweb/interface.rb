@@ -1,19 +1,10 @@
 module ARKWEB
+
+# The Interface class implements arkweb's command line interface
 class Interface
 
-# TODO
-#  def self.load_plugins
-#    if Conf[:plugin]
-#      plugins = Conf[:plugin].split(',')
-#      plugins.each do |plugin|
-#        name = File.basename(plugin).sub(/\.[^\.]+?$/,'').capitalize
-#        load plugin
-#        klass = eval "ARKWEB::#{name}"
-#        ARKWEB.register_plugin(klass)
-#      end
-#    end
-#  end
-
+	# Process an existing site directory, generating HTML files to the output
+	# directory. This is called from Interface#run
   def self.process(path)
     msg "Processing site: #{path}"
     site = Site.new(path)
@@ -39,6 +30,8 @@ class Interface
     msg "Done! Wrote site to: #{site[:output]}"
   end
 
+	# Initialize a new site at the given path by copying the skeletal site
+	# structure there. This is called from Interface#run
   def self.init(path)
     msg "Initializing site: #{path}"
     FileUtils.mkdir_p(path)
@@ -47,6 +40,7 @@ class Interface
     msg "Done! Initialized site: #{path}"
   end
 
+	# Either prcoess an existing site or initialize a new site
   def self.run(path=nil)
     msg Version
     if path && File.directory?(path)
