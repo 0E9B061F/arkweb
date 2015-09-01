@@ -27,3 +27,4 @@ depending on where the executable is run from relative to the site.
 
 smart rendering: only re-render files which have changed since the last rendering.
 
+yaml frontmatter on stylseets with heritable attribute
