@@ -114,7 +114,7 @@ spec = Gem::Specification.new do |s|
   s.summary     = s.description
   s.homepage    = 'https://github.com/grimheart/arkweb'
 
-  s.files        = Dir.glob("{bin,lib,templates}/**/*") + %w(LICENSE README freeze.yaml)
+  s.files        = Dir.glob("{bin,lib,templates}/**/*") + %w(LICENSE README.md freeze.yaml)
   s.bindir      = 'bin'
   s.executables  = ['ark']
   s.require_path = 'lib'
@@ -126,7 +126,7 @@ Gem::PackageTask.new(spec) do |pkg|
 end
 
 Rake::RDocTask.new do |rd|
-  rd.main       = 'README'
+  rd.main       = 'README.md'
   rd.rdoc_dir   = 'doc'
   rd.title      = "ARKWEB #{H.version}"
   rd.rdoc_files = Dir['bin/*'] + Dir['lib/*']
