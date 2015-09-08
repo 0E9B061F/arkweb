@@ -145,7 +145,7 @@ class Stylesheet
 
 	# Return true if this stylesheet is in SASS
 	def is_sass?
-		return not @basename[/\.s[ca]ss$/].nil?
+		return !@basename[/\.s[ca]ss$/].nil?
 	end
 
 	# Represent this object as the working path to the given stylesheet
