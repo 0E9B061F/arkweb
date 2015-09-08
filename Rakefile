@@ -26,9 +26,21 @@ class Helper
       v = v + '.dev'
     end
     @version = v
+
+    @freeze = 'freeze.yaml'
+    @build_dir = 'build'
   end
 
   attr_reader :home, :version
+  attr_reader :freeze, :build_dir
+
+  def mkvdir
+    FileUtils.mkdir_p(self.version_dir)
+  end
+
+  def rm_r(path)
+    FileUtils.rm_r(path) if File.directory?(path)
+  end
 
   def name
     Project.downcase
@@ -72,6 +84,9 @@ class Helper
   def src_file
     File.join(self.version_dir, self.src)
   end
+  def pb_file
+    File.join(self.version_dir, 'PKGBUILD')
+  end
 
   def gem_link
     File.join(self.home, 'v', 'gem')
@@ -81,6 +96,9 @@ class Helper
   end
   def src_link
     File.join(self.home, 'v', 'src')
+  end
+  def pb_link
+    File.join(self.home, 'v', 'PKGBUILD')
   end
 
   def set_version(v)
@@ -114,7 +132,7 @@ spec = Gem::Specification.new do |s|
   s.summary     = s.description
   s.homepage    = 'https://github.com/grimheart/arkweb'
 
-  s.files        = Dir.glob("{bin,lib,templates}/**/*") + %w(LICENSE README.md freeze.yaml)
+  s.files        = Dir.glob("{bin,lib,templates}/**/*") + ['LICENSE', 'README.md', H.freeze]
   s.bindir      = 'bin'
   s.executables  = ['ark']
   s.require_path = 'lib'
@@ -136,80 +154,87 @@ desc "Freeze version info"
 task :freeze do
   freeze = {}
   freeze['version']  = H.version
-  File.open('freeze.yaml', 'w') do |f|
+  File.open(H.freeze, 'w') do |f|
     YAML.dump(freeze, f)
   end
 end
 
 desc "Cleanup freeze info"
 task :melt do
-  FileUtils.rm('freeze.yaml') if File.exist?('freeze.yaml')
+  FileUtils.rm(H.freeze) if File.exist?(H.freeze)
 end
 
 desc "Build a gem"
-task :buildgem => [:clobber, :freeze, :gem, :melt] do
+task :buildgem => [:freeze, :gem, :melt] do
+  H.mkvdir
+  FileUtils.cp("pkg/#{H.gem}", H.version_dir, :verbose => true)
+  FileUtils.ln_s(H.gem_file, H.gem_link, :force => true, :verbose => true)
+  FileUtils.rm_r('pkg')
 end
 
 desc "Generate a PKGBUILD for the latest version, to be used with makepkg"
 task :pkgbuild => :buildgem do
   title "Generating PKGBUILD"
-  FileUtils.rm_r('build/') if File.directory?('build/')
-  FileUtils.mkdir('build/')
+  H.mkvdir
   @version = H.version
-  FileUtils.cp("pkg/#{H.gem}",'build', :verbose => true)
-  check = Digest::MD5.file("build/#{H.gem}").to_s
+  check = Digest::MD5.file(H.gem_file).to_s
   @md5  = "md5sums=('#{check}')"
   File.open('PKGBUILD.erb', 'r') do |f|
     erb = ERB.new(f.read)
     pb = erb.result(binding)
-    File.open('build/PKGBUILD', 'w') {|o| o.write(pb) }
+    File.open("#{H.version_dir}/PKGBUILD", 'w') {|o| o.write(pb) }
   end
+  FileUtils.ln_s(H.pb_file, H.pb_link, :force => true, :verbose => true)
 end
 
 desc "Run makepkg, generating a .pkg file for use with pacman"
 task :makepkg => :pkgbuild do
   title "MAKEPKG"
-  Dir.chdir('build/')
+  Dir.chdir(H.version_dir)
   sh('makepkg -fc')
   H.return
+  FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true, :verbose => true)
 end
 
 desc "Generate a source tar suitable for upload to the AUR"
 task :aur => :pkgbuild do
   title "TAURBALL"
-  Dir.chdir('build/')
-  sh('makepkg -f --source')
+  Dir.chdir(H.version_dir)
+  sh('makepkg -fc --source')
   H.return
+  FileUtils.ln_s(H.src_file, H.src_link, :force => true, :verbose => true)
 end
 
 desc "Scan generated PKGBUILD and .pkg. using namcap"
 task :namcap => :makepkg do
   title "NAMCAP"
-  Dir.chdir('build/')
+  Dir.chdir(H.version_dir)
   sh('namcap PKGBUILD')
   sh("namcap #{H.pkg}")
   H.return
 end
 
 desc "Perform full packaging task, producing a gem, a pacman package and AUR src tar."
-task :pack => [:buildgem, :makepkg, :aur, :namcap] do
-  title "Finishing package task. See #{H.version_dir}"
-  FileUtils.rm_r(H.version_dir, :verbose => true) if File.directory?(H.version_dir)
-  FileUtils.mkdir_p(H.version_dir, :verbose => true)
-  FileUtils.cp(["build/#{H.pkg}", H.src, H.gem], H.version_dir, :verbose => true)
-  H.return
-  FileUtils.ln_s(H.pkg_file, H.pkg_link, :force => true, :verbose => true)
-  FileUtils.ln_s(H.gem_file, H.gem_link, :force => true, :verbose => true)
-  FileUtils.ln_s(H.src_file, H.src_link, :force => true, :verbose => true)
+task :pack => [:makepkg, :aur, :namcap] do
+  title "Finished package task. See #{H.version_dir}"
 end
 
+desc "Remove all build files for this version"
+task :clean do
+  H.rm_r(H.version_dir)
+  FileUtils.rm([H.pkg_link, H.gem_link, H.src_link, H.pb_link], force: true)
+end
+
+desc "Clean all build files and rebuild"
+task :repack => [:clean, :pack]
+
 desc "Uninstall arkweb if installed"
-task :uninstall do
+task :uninstall_pkg do
   sh("pacman -Q #{H.pkg_name} && sudo pacman -Rdd #{H.pkg_name}")
 end
 
 desc "Install pacman package, according to the version env variable"
-task :install do
+task :install_pkg => :makepkg do
   sh("sudo pacman -U #{H.pkg_file}")
 end
 
