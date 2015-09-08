@@ -1,13 +1,13 @@
-# Maintainer: ennen <nn at studio25 dot org>
-pkgname=ruby-arkweb-3
+# Maintainer: M. Sharpless <macquarie.sharpless at gmail dot com>
+pkgname=ruby-arkweb
 _gemname=${pkgname#ruby-}
 pkgver=<%= @version %>
 pkgrel=1
 pkgdesc="A simple document processor suitable for building flat websites."
 arch=(any)
-url="http://github.com/ennen/arkweb-3"
+url="https://github.com/grimheart/arkweb"
 license=('GPL')
-depends=('ruby' 'ruby-maruku' 'ruby-wikicloth' 'ruby-trollop')
+depends=('ruby')
 source=("${_gemname}-${pkgver}.gem")
 noextract=("${_gemname}-${pkgver}.gem")
 <%= @md5 %>
