@@ -119,6 +119,15 @@ task :version do
 	puts "#{Helper::Project} #{H.version}"
 end
 
+desc "Open an IRB session with the library already require'd"
+task :console do
+  require 'irb'
+  require 'irb/completion'
+  require_relative 'lib/arkweb'
+  ARGV.clear
+  IRB.start
+end
+
 RSpec::Core::RakeTask.new 'spec' do |t|
   t.pattern = './spec/*.rb'
 end
