@@ -1,10 +1,13 @@
 source 'https://rubygems.org'
 
-gem 'maruku'
+gem 'ark-util'
+gem 'ark-cli'
+
+gem 'rdiscount'
 gem 'wikicloth'
-gem 'trollop'
-gem 'yui-compressor'
-gem 'libarchive'
-gem 'w3c_validators'
 gem 'sass'
+gem 'yui-compressor'
+gem 'w3c_validators'
+gem 'libarchive'
+
 
