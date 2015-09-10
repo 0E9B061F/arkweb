@@ -196,7 +196,8 @@ class Site
     }
   }
   
-  def initialize(root)
+  def initialize(interface, root)
+    @interface = interface
     raise BrokenSiteError unless File.directory?(root)
     @root = root
     @name = File.basename(root)
@@ -289,7 +290,7 @@ class Site
 
     @engine = Engine.new(self)
   end
-  attr_reader :root, :name, :paths
+  attr_reader :interface, :root, :name, :paths
   attr_reader :author, :title, :desc, :tags, :keywords, :xuacompat
   attr_reader :webfonts, :styles, :files, :engine
 	attr_reader :pages, :sections

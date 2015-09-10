@@ -3,6 +3,6 @@
 require_relative '../lib/arkweb'
 
 
-
-ARKWEB::Interface.run(*ARGV)
+arkweb = ARKWEB::Interface.new
+arkweb.run
 

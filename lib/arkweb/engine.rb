@@ -18,7 +18,7 @@ class Engine
     @page = ''
     @body = ''
     @pages = {}
-    @template = root("templates/#{mode}.html.erb")
+    @template = @site.interface.root("templates/#{mode}.html.erb")
     @cache = {}
 
     if Conf[:validate] && ARKWEB.optional_gem('w3c_validators')
