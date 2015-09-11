@@ -6,6 +6,7 @@ require 'fileutils'
 require 'erb'
 require 'digest'
 
+require 'ark/utility'
 
 
 class Helper
@@ -14,25 +15,12 @@ class Helper
 
   def initialize
     @home = Dir.pwd
-
-    v = `git describe --tags`.strip.tr('-', '.')
-    c = 2 - v.count('.')
-    if c > 0
-      v = v + ('.0' * c)
-    else
-      v.sub!(/\.[^\.]+$/, '')
-    end
-    if !`git status --porcelain`.empty?
-      v = v + '.dev'
-    end
-    @version = v
-
+    @version = Ark::Git.version
+    @identity = Ark::Git.version_line(project: Project)
     @freeze = 'freeze.yaml'
-    @build_dir = 'build'
   end
 
-  attr_reader :home, :version
-  attr_reader :freeze, :build_dir
+  attr_reader :home, :version, :identity, :freeze
 
   def mkvdir
     FileUtils.mkdir_p(self.version_dir)
@@ -116,7 +104,7 @@ end
 
 desc "Report version information and exit"
 task :version do
-	puts "#{Helper::Project} #{H.version}"
+	puts H.identity
 end
 
 desc "Open an IRB session with the library already require'd"
@@ -155,7 +143,7 @@ end
 Rake::RDocTask.new do |rd|
   rd.main       = 'README.md'
   rd.rdoc_dir   = 'doc'
-  rd.title      = "ARKWEB #{H.version}"
+  rd.title      = "#{H.identity} Documentation"
   rd.rdoc_files = Dir['bin/*'] + Dir['lib/*']
 end
 
