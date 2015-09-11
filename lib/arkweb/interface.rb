@@ -30,7 +30,7 @@ class Interface
       @version = 'DEV-VERSION'
     end
 
-    r = Ark::CLI.report do |s|
+    @conf = Ark::CLI.report do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
       s.args 'site'
@@ -42,6 +42,7 @@ class Interface
       desc: 'Suppress all messages'
 
       s.opt :output, :o,
+      args: 'path',
       desc: 'Directory to write rendered files to'
 
       s.opt :clobber, :l,
@@ -59,16 +60,18 @@ class Interface
       s.raise_on_trailing
     end
 
-    @sitepath = r.arg(:site)
-    @conf     = r.opts
+    @sitepath = @conf.arg(:site)
 
-    Ark::Log::Conf[:verbose] = r.opt(:verbose)
-    Ark::Log::Conf[:quiet] = r.opt(:quiet)
+    Ark::Log::Conf[:verbose] = @conf.opt(:verbose)
+    Ark::Log::Conf[:quiet]   = @conf.opt(:quiet)
 
-    require 'yui/compressor' if @conf[:minify]
-    require 'w3c_validators' if @conf[:validate]
+    require 'yui/compressor' if @conf.opt(:minify)
+    require 'w3c_validators' if @conf.opt(:validate)
   end
+
   attr_reader :version
+
+  attr_reader :conf
 
   def identity
     return "#{@project} #{@version}"
@@ -87,7 +90,7 @@ class Interface
   def render
     msg "Processing site: #{@sitepath}"
     site = Site.new(self, @sitepath)
-    if @conf[:clobber]
+    if @conf.opt(:clobber)
       [:output, :cache, :tmp].each do |p|
         if File.directory?(site[p])
           glob = File.join(site[p], '*')
@@ -97,7 +100,7 @@ class Interface
       end
     end
     site.engine.write_site
-    if @conf[:clean]
+    if @conf.opt(:clean)
       [:cache, :tmp].each do |p|
         if File.directory?(site[p])
           glob = File.join(site[p], '*')

@@ -21,10 +21,10 @@ class Engine
     @template = @site.interface.root("templates/#{mode}.html.erb")
     @cache = {}
 
-    if Conf[:validate] && ARKWEB.optional_gem('w3c_validators')
+    if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
-    if Conf[:minify] && ARKWEB.optional_gem('yui/compressor')
+    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
     end
@@ -168,7 +168,7 @@ class Engine
       end
     end
 
-    if Conf[:validate] && ARKWEB.optional_gem('w3c_validators')
+    if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
       result = @validator.validate_file(page.out)
       msg "Validating file: #{page.out}"
       if result.errors.length > 0
@@ -186,7 +186,7 @@ class Engine
     end
     self.copy_resources
 
-    if Conf[:minify] && ARKWEB.optional_gem('yui/compressor')
+    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
       Dir[File.join(@site[:output], '*.{css,js}')].each do |path|
         begin
           dbg "Minifying file: #{path}"
