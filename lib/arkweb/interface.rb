@@ -13,22 +13,11 @@ class Interface
 
     if File.exist?(@freeze)
       f = YAML.load_file(@freeze)
-      @version = f['version']
-    elsif system('git rev-parse')
-      v = `git describe --tags`.strip.tr('-', '.')
-      c = 2 - v.count('.')
-      if c > 0
-        v = v + ('.0' * c)
-      else
-        v.sub!(/\.[^\.]+$/, '')
-      end
-      if !`git status --porcelain`.empty?
-        v = v + '.dev'
-      end
-      @version = v
+      @version  = f['version']
     else
-      @version = 'DEV-VERSION'
+      @version  = Ark::Git.version(default: 'DEV VERSION')
     end
+    @identity = Ark::Git.version_line(default: @version, project: @project)
 
     @conf = Ark::CLI.report do |s|
       s.name 'ark'
@@ -73,9 +62,7 @@ class Interface
 
   attr_reader :conf
 
-  def identity
-    return "#{@project} #{@version}"
-  end
+  attr_reader :identity
 
   def root(*args)
     if args.empty?
