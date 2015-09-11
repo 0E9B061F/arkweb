@@ -11,6 +11,9 @@ require 'ark/cli'
 
 require_relative 'arkweb/error'
 require_relative 'arkweb/site'
+require_relative 'arkweb/page'
+require_relative 'arkweb/stylesheet'
+require_relative 'arkweb/section'
 require_relative 'arkweb/engine'
 require_relative 'arkweb/interface'
 
