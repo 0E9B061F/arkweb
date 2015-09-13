@@ -79,9 +79,9 @@ class Interface
     site = Site.new(self, @sitepath)
     if @conf.opt(:clobber)
       [:output, :cache, :tmp].each do |p|
-        if File.directory?(site[p])
-          glob = File.join(site[p], '*')
-          dbg "Clobbering directory: #{site[p]}"
+        if File.directory?(site.out(p))
+          glob = File.join(site.out(p), '*')
+          dbg "Clobbering directory: #{site.out(p)}"
           FileUtils.rm_r(Dir[glob])
         end
       end
@@ -89,14 +89,14 @@ class Interface
     site.engine.write_site
     if @conf.opt(:clean)
       [:cache, :tmp].each do |p|
-        if File.directory?(site[p])
-          glob = File.join(site[p], '*')
-          dbg "Cleaning directory: #{site[p]}"
+        if File.directory?(site.out(p))
+          glob = File.join(site.out(p), '*')
+          dbg "Cleaning directory: #{site.out(p)}"
           FileUtils.rm_r(Dir[glob])
         end
       end
     end
-    msg "Done! Wrote site to: #{site[:output]}"
+    msg "Done! Wrote site to: #{site.out(:render)}"
   end
 
   # Initialize a new site at the given path by copying the skeletal site

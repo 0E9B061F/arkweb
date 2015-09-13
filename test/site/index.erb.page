@@ -2,7 +2,7 @@
 
 <tr>
 	<td class="label">Site title:</td>
-	<td><%= @site.title %></tr>
+	<td><%= @site.info(:title) %></tr>
 </tr>
 
 <tr>
@@ -39,7 +39,7 @@
 <td class="label" colspan="2">Metadata:</td>
 </tr>
 
-<% @site.metadata.each do |k,v| %>
+<% @site.conf.each do |k,v| %>
 	<% v = v.join(', ') if v.is_a?(Array) %>
 	<tr>
 		<td class="label"><%= k %></td>

@@ -24,16 +24,22 @@ class Stylesheet
     @site_path    = Pathname.new(@working_path).relative_path_from(Pathname.new(@site.root)).to_s
 
     if self.site_style?
-      @output_path  = File.join(@site[:aw_out], @rendered_name)
-      @aw_path      = Pathname.new(@output_path).relative_path_from(Pathname.new(@site[:output])).to_s
+      @output_path  = File.join(@site.output[:aw], @rendered_name)
+      @aw_path      = Pathname.new(@output_path).relative_path_from(Pathname.new(@site.output[:render])).to_s
       @server_path  = File.join('/', @aw_path)
     else
       site_dirname  = File.dirname(@site_path)
       rendered_path = File.join(site_dirname, @rendered_name)
-      @output_path  = File.join(@site[:output], rendered_path)
+      @output_path  = File.join(@site.output[:render], rendered_path)
       @server_path  = File.join('/', rendered_path)
     end
   end
+
+  attr_reader :basename
+  attr_reader :name
+  attr_reader :working_path
+  attr_reader :output_path
+  attr_reader :server_path
 
   # True if this stylesheet is found in the ARKWEB directory. False if located
   # in the site structure.
@@ -44,6 +50,10 @@ class Stylesheet
   # Return true if this stylesheet is in SASS
   def is_sass?
     return !@basename[/\.s[ca]ss$/].nil?
+  end
+
+  def is_css?
+    return !self.is_sass?
   end
 
   # Represent this object as the working path to the given stylesheet

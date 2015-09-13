@@ -29,9 +29,9 @@ class Engine
       @java_press = YUI::JavaScriptCompressor.new
     end
 
-		@page_erb = File.open(@site[:page_erb], 'r') {|f| f.read }
-    @site_erb = if File.exist?(@site[:site_erb])
-			File.open(@site[:site_erb], 'r') {|f| f.read }
+		@page_erb = File.open(@site.in(:page_erb), 'r') {|f| f.read }
+    @site_erb = if File.exist?(@site.in(:site_erb))
+			File.open(@site.in(:site_erb), 'r') {|f| f.read }
     else
 			File.open(@template, 'r') {|f| f.read }
     end
@@ -92,33 +92,31 @@ class Engine
 
   def copy_resources
 		# Make sure the appropriate subdirectories exist in the output folder
-    FileUtils.mkdir_p(@site[:aw_out])
-    FileUtils.mkdir_p(@site[:img_out])
+    FileUtils.mkdir_p(@site.out(:aw))
+    FileUtils.mkdir_p(@site.out(:images))
 
-    unless @site.files[:images].empty?
-      dbg "Copying image directory: #{@site[:images]} -> #{@site[:img_out]}"
-      FileUtils.cp_r(@site[:images], @site[:aw_out])
+    unless @site.images.empty?
+      dbg "Copying images: #{@site.in(:images)} -> #{@site.out(:images)}"
+      FileUtils.cp_r(@site.images, @site.out(:images))
     end
 
-		@site.styles.each do |style|
-			if style[/\.css$/]
-				FileUtils.cp(style, @site[:aw_out])
-			elsif style[/\.s[ca]ss$/]
-	      css = File.basename(style).sub(/\.[^\.]+$/, '.css')
-  	    css = File.join(@site[:aw_out], css)
-
+		@site.styles.each do |name, style|
+			if style.is_css?
+				FileUtils.cp(style.working_path, style.output_path)
+      else
 	      # Only render if output doesn't already exist, or if output is outdated
-	      if !File.exist?(css) || File.mtime(style) > File.mtime(css)
-	        dbg "Rendering SASS file '#{style}' to '#{css}'"
-	        `sass -t compressed #{style} #{css}`
+	      if !File.exist?(style.output_path) || File.mtime(style.working_path) > File.mtime(style.output_path)
+	        dbg "Rendering SASS file '#{style}' to '#{style.output_path}'"
+	        `sass -t compressed #{style.working_path} #{style.output_path}`
 	      end
 			end
 		end
 
-    if !@site.webfonts.empty? && ARKWEB.optional_gem('libarchive')
-      @site.webfonts['fontsquirrel'].each do |font|
+    # Get FontDquirrel fonts
+    if !@site.conf[:webfonts].empty? && ARKWEB.optional_gem('libarchive')
+      @site.conf[:webfonts]['fontsquirrel'].each do |font|
         url = "http://www.fontsquirrel.com/fontfacekit/#{font}"
-        dest = File.join(@site[:tmp], "#{font}.zip")
+        dest = File.join(@site.out(:tmp), "#{font}.zip")
         begin
           font_cache = File.join(@site[:cache], font)
           unless File.directory?(font_cache)
@@ -206,7 +204,7 @@ class Engine
     end
 
     # self.run_after_hook
-    FileUtils.rm_r(@site[:tmp])
+    FileUtils.rm_r(@site.out(:tmp))
   end
 
 end # class Engine

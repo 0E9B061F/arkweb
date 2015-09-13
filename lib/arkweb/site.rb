@@ -3,24 +3,13 @@ module ARKWEB
 class Site
 
   RootSectionName = 'root'
+  InputARKWEB     = 'ARKWEB'
   OutputARKWEB    = 'aw'
-
-  Paths = {}
-  Paths[:arkweb]   = "ARKWEB"
-  Paths[:header]   = File.join(Paths[:arkweb], "header.yaml")
-  Paths[:page_erb] = File.join(Paths[:arkweb], "page.html.erb")
-  Paths[:site_erb] = File.join(Paths[:arkweb], "site.html.erb")
-  Paths[:style]    = File.join(Paths[:arkweb], "site.{css,sass,scss}")
-  Paths[:output]   = File.join(Paths[:arkweb], "output")
-  Paths[:aw_out]   = File.join(Paths[:output], OutputARKWEB)
-  Paths[:img_out]  = File.join(Paths[:aw_out], "images")
-  Paths[:tmp]      = File.join(Paths[:arkweb], "tmp")
-  Paths[:cache]    = File.join(Paths[:arkweb], "cache")
-  Paths[:images]   = "images"
 
   Types = {
     :pages    => "*.page",
     :images   => "*.{jpg,jpeg,png,gif}",
+    :style    => "*.{css,scss,sass}",
     :sass     => "*.{scss,sass}",
     :css      => "*.css"
   }
@@ -37,80 +26,80 @@ class Site
   }
 
   def initialize(interface, root)
+
+    # Basics
     @interface = interface
     raise BrokenSiteError unless File.directory?(root)
     @root = root
     @name = File.basename(root)
-    @paths = make_path
 
+    # Paths to special input directories and files
+    @input = {}
+    @input[:arkweb]   = File.join(@root, InputARKWEB)
+    @input[:header]   = File.join(@input[:arkweb], 'header.yaml')
+    @input[:page_erb] = File.join(@input[:arkweb], 'page.html.erb')
+    @input[:site_erb] = File.join(@input[:arkweb], 'site.html.erb')
+    @input[:style]    = File.join(@input[:arkweb], 'site.{css,sass,scss}')
+    @input[:images]   = File.join(@input[:arkweb], 'images')
+
+    # Load the header
     begin
-      header = YAML.load_file(@paths[:header])
+      header = YAML.load_file(@input[:header])
     rescue => e
       raise BrokenSiteError,
-      "While loading site '#{@root}': #{e}\nHeader file '#{@paths[:header]}' is missing or malformed."
+      "While loading site '#{@root}': #{e}\nHeader file '#{@input[:header]}' is missing or malformed."
     end
 
-    # XXX
-    @metadata = header
+    # Configure details about the site
+    @conf = {}
+    @conf[:author]    = header['author']
+    @conf[:title]     = header['title']
+    @conf[:desc]      = header['desc'] || header['description']
+    @conf[:tags]      = header['tags'] || header['keywords'] || []
+    @conf[:tags]      = @conf[:tags].join(", ")
+    @conf[:keywords]  = @conf[:tags]
+    @conf[:xuacompat] = header['xuacompat'] || false
+    @conf[:webfonts]  = {'google' => [], 'fontsquirrel' => []}
+    @conf[:webfonts]  = @conf[:webfonts].merge(header['webfonts']) if header['webfonts']
 
-    @paths[:output] = @interface.conf.opt(:output) || header['output'] || @paths[:output]
-    @paths[:tmp]    = header['tmp'] || @paths[:tmp]
-    @paths[:images] = header['images'] || @paths[:images]
+    # Finish with input paths
+    @input[:styles] = header['styles'] || Dir[File.join(@input[:arkweb], Types[:style])]
 
-    @author    = header['author']
-    @title     = header['title']
-    @desc      = header['desc'] || header['description']
-    @tags      = header['tags'] || header['keywords']
-    @xuacompat = header['xuacompat'] || false
-    @keywords  = @tags ? @tags.join(', ') : ''
-    @webfonts  = {'google' => [], 'fontsquirrel' => []}
-    @webfonts  = @webfonts.merge(header['webfonts']) if header['webfonts']
-    @styles    = header['styles'] || []
-
-    # Create paths to each style, relative to the ARKWEB directory
-    @styles.map! do |s|
-      File.join(@paths[:arkweb], File.basename(s))
-    end
-    @styles << Dir[@paths[:style]].first()
-    @styles = @styles.compact.uniq
-
-    @output_styles = @styles.map do |style|
-      css = File.basename(style).sub(/\.[^\.]+$/, '.css')
-      File.join(@paths[:aw_out], css)
-    end
-
-    @link_styles = @output_styles.map do |style|
-      link = Pathname.new(@paths[:aw_out]).relative_path_from(Pathname.new(@paths[:output]))
-      File.join('/', link, File.basename(style))
-    end
+    # Paths to where output files should be rendered
+    @output = {}
+    @output[:tmp]    = header['tmp']   || File.join(@input[:arkweb], 'tmp')
+    @output[:cache]  = header['cache'] || File.join(@input[:arkweb], 'cache')
+    @output[:render] = @interface.conf.opt(:output) || header['output'] || File.join(@input[:arkweb], 'output')
+    @output[:aw]     = File.join(@output[:render], OutputARKWEB)
+    @output[:images] = File.join(@output[:aw], 'images')
 
     @font_styles = []
-
-    if @webfonts
-      if @webfonts['fontsquirrel']
-        @webfonts['fontsquirrel'].map! {|f| f.tr(' ', '-') }
-      end
-      @webfonts.each do |service,fonts|
-        service = service.to_sym
-        if FontService[service]
-          @font_styles += FontService[service][fonts]
-        else
-          wrn "Unknown font provider '#{service}' for fonts: #{fonts}"
-        end
+    if @conf[:webfonts]['fontsquirrel']
+      @conf[:webfonts]['fontsquirrel'].map! {|f| f.tr(' ', '-') }
+    end
+    @conf[:webfonts].each do |service,fonts|
+      service = service.to_sym
+      if FontService[service]
+        @font_styles += FontService[service][fonts]
+      else
+        wrn "Unknown font provider '#{service}' for fonts: #{fonts}"
       end
     end
 
-    @files = {}
-    @files[:pages]  = Dir[File.join(@root, Types[:pages])]
-    @files[:images] = Dir[File.join(@paths[:images], Types[:images])]
-    @files[:css]    = Dir[File.join(@root, Types[:css])]
-    @files[:sass]   = Dir[File.join(@root, Types[:sass])]
+    @images = Dir[File.join(@input[:images], Types[:images])]
+
+    sheets = Dir[File.join(@input[:arkweb], Types[:style])]
+    @styles = {}
+    sheets.each do |s|
+      s = Stylesheet.new(self, s)
+      @styles[s.name] = s
+    end
 
     # Return a list of sections, which are any subdirectories excluding special subdirectories
     # The root directory is itself a section
     # Each section will later be scanned for pages and media, and then rendered
     subdirs = Dir[File.join(@root, '**/')].reject do |path|
-      path.start_with?(@paths[:arkweb], @paths[:images])
+      path.start_with?(@input[:arkweb])
     end
     @sections = {}
     @pages = []
@@ -124,64 +113,61 @@ class Site
       @pages += s.pages
     end
 
-    [:output, :tmp, :images, :cache].each do |dir|
-      FileUtils.mkdir_p(@paths[dir])
+    [:render, :tmp, :images, :cache].each do |dir|
+      FileUtils.mkdir_p(@output[dir])
     end
 
     @engine = Engine.new(self)
   end
-  attr_reader :interface, :root, :name, :paths
-  attr_reader :author, :title, :desc, :tags, :keywords, :xuacompat
-  attr_reader :webfonts, :styles, :files, :engine
-  attr_reader :pages, :sections
-  attr_reader :metadata
 
-  private
+  attr_reader :interface
+  attr_reader :engine
+  attr_reader :root
+  attr_reader :name
+  attr_reader :input
+  attr_reader :output
+  attr_reader :conf
+  attr_reader :styles
+  attr_reader :pages
+  attr_reader :sections
+  attr_reader :webfonts
+  attr_reader :images
 
-  # Create site-relative paths from Paths
-  def make_path
-    path = {}
-    Paths.each do |name, p|
-      path[name] = File.join(@root, p)
-    end
-    return path
+  def info(key)
+    @conf[key.to_sym]
   end
 
-  def stylesheet_links(paths)
-    links = []
-    paths.each do |path|
-      links << %Q(<link href="#{path}" rel="stylesheet" type="text/css" />)
-    end
-    return links.join("\n")
+  # Convenience method for accessing +@input+
+  def in(key)
+    @input[key.to_sym]
   end
 
-  public
-
-  # Convenience method for accessing #paths
-  def [](key)
-    @paths[key]
+  # Convenience method for accessing +@output+
+  def out(key)
+    @output[key.to_sym]
   end
 
-  def img(name, **options)
-    alt   = options[:alt]
-    id    = options[:id]
-    klass = options[:class]
+  def img(name, alt: nil, id: nil, klass: nil)
     alt   = %Q( alt="#{alt}")     if alt
     id    = %Q( id="#{id}")       if id
     klass = %Q( class="#{klass}") if klass
 
-    link = Pathname.new(@paths[:img_out]).relative_path_from(Pathname.new(@paths[:output]))
+    link = Pathname.new(@output[:images]).relative_path_from(Pathname.new(@output[:render]))
     link = File.join('/', link, name)
 
     return %Q(<img#{id}#{klass}#{alt} src="#{link}" />)
   end
 
   def link_styles()
-    stylesheet_links(@link_styles)
+    @styles.map {|n,s| s.head_link }.join("\n")
   end
 
   def link_webfonts()
-    stylesheet_links(@font_styles)
+    links = []
+    @font_styles.each do |path|
+      links << %Q(<link href="#{path}" rel="stylesheet" type="text/css" />)
+    end
+    return links.join("\n")
   end
 
 end # class Site

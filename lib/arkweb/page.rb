@@ -36,7 +36,7 @@ class Page
 
     @link = File.join('/', @relativedir, @html)
 
-    @out  = File.join(@site[:output], @link)
+    @out  = File.join(@site.output[:render], @link)
     @out_dir = File.dirname(@out)
 
     @type = @path[/\.(.+)\.page$/, 1]
