@@ -7,7 +7,7 @@ class Site
   OutputARKWEB    = 'aw'
 
   Types = {
-    :pages    => "*.page",
+    :pages    => "*.{erb,md,html,wiki}",
     :images   => "*.{jpg,jpeg,png,gif}",
     :style    => "*.{css,scss,sass}",
     :sass     => "*.{scss,sass}",
@@ -72,6 +72,7 @@ class Site
     @output[:render] = @interface.conf.opt(:output) || header['output'] || File.join(@input[:arkweb], 'output')
     @output[:aw]     = File.join(@output[:render], OutputARKWEB)
     @output[:images] = File.join(@output[:aw], 'images')
+    @output[:fonts]  = File.join(@output[:aw], 'fonts')
 
     @font_styles = []
     if @conf[:webfonts]['fontsquirrel']

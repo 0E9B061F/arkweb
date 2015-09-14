@@ -1,4 +1,39 @@
 module ARKWEB
+
+
+class Collection
+  def initialize(page, pages, pagesize)
+    @page      = page
+    @pages     = pages
+    @pagesize  = pagesize
+    @pagecount = (@pages.length / @pagesize.to_f).ceil
+    @range     = (1..@pagecount)
+  end
+
+  attr_reader :range
+  attr_reader :pagecount
+
+  def paginate(index)
+    index = index - 1
+    first = index * @pagesize
+    last  = first + (@pagesize - 1)
+    @pages[first..last]
+  end
+
+  def links(index)
+    links = []
+    @range.each do |i|
+      if i == index
+        links << "<span class=\"pagination pagination-current\">#{index}</span>"
+      else
+        links << @page.link_to(text: i, klass: 'pagination pagination-link', index: i)
+      end
+    end
+    links.join("\n")
+  end
+end
+
+
 class Engine
 
   # Creates bindings for rendering ERB templates
@@ -42,60 +77,55 @@ class Engine
     @cache[file] ||= File.open(file, 'r') {|f| f.read }
   end
 
-	# XXX this is here to handle rendering templates for now, since the other
-	# eval function are expecting page objects. should make a similar template
-	# object which follows the same interface.
-  def evaluate_erb_data(data, env)
-    dbg "Evaluating ERB template [XXX]"
+  def evaluate_erb(data, env)
     box = Sandbox.new(env)
     erb = ERB.new(data)
     erb.result(box.bindings)
   end
 
-  def evaluate_erb(page, env)
-    dbg "Evaluating ERB page: #{page}"
-    box = Sandbox.new(env)
-    erb = ERB.new(page.contents)
-    erb.result(box.bindings)
-  end
-
-  def evaluate_md(page)
+  def evaluate_md(data)
     return unless ARKWEB.optional_gem('rdiscount')
-    dbg "Evaluating Markdown page: #{page}"
-    RDiscount.new(page.contents).to_html
+    RDiscount.new(data).to_html
   end
 
-  def evaluate_wiki(page)
+  def evaluate_wiki(data)
     return unless ARKWEB.optional_gem('wikicloth')
-    dbg "Evaluating MediaWiki markup page: #{page}"
-    WikiCloth::Parser.new(:data => page.contents).to_html
+    WikiCloth::Parser.new(:data => data).to_html
   end
 
-  def render_page(page)
-    dbg "Rendering page: #{page}"
-    @page = case page.type
-    when 'md'
-      self.evaluate_md(page)
-    when 'wiki'
-      self.evaluate_wiki(page)
-    when 'erb'
-      self.evaluate_erb(page, :site => @site)
-    else
-      page.contents
+  def render_page(page, index=nil, collection=nil)
+    if index
+      dbg "#{page.base}: rendering index #{index}", 1
     end
-    @body = self.evaluate_erb_data(@page_erb, :site => @site, :page => @page)
-    @page = ''
-    @pages[page] = self.evaluate_erb_data(@site_erb, :site => @site, :body => @body)
-    @body = ''
-    return true
+    if page.has_erb?
+      dbg "#{page.base}: evaluating ERB", 1
+      markup = self.evaluate_erb(page.contents, :site => @site, :section => page.section, :page => page, :index => index, :collection => collection)
+    else
+      markup = page.contents
+    end
+    html = case page.type
+    when 'md'
+      dbg "#{page.base}: evaluating Markdown", 1
+      self.evaluate_md(markup)
+    when 'wiki'
+      dbg "#{page.base}: evaluating MediaWiki markup", 1
+      self.evaluate_wiki(markup)
+    when 'html'
+      markup
+    else
+      # XXX
+      raise "Cannot render page type: #{page.type}"
+    end
+    body = self.evaluate_erb(@page_erb, :site => @site, :body => html, :section => page.section, :page => page)
+    self.evaluate_erb(@site_erb, :site => @site, :body => body, :section => page.section, :page => page)
   end
 
   def copy_resources
 		# Make sure the appropriate subdirectories exist in the output folder
     FileUtils.mkdir_p(@site.out(:aw))
-    FileUtils.mkdir_p(@site.out(:images))
 
     unless @site.images.empty?
+      FileUtils.mkdir_p(@site.out(:images))
       dbg "Copying images: #{@site.in(:images)} -> #{@site.out(:images)}"
       FileUtils.cp_r(@site.images, @site.out(:images))
     end
@@ -112,13 +142,14 @@ class Engine
 			end
 		end
 
-    # Get FontDquirrel fonts
+    # Get FontSquirrel fonts
     if !@site.conf[:webfonts].empty? && ARKWEB.optional_gem('libarchive')
       @site.conf[:webfonts]['fontsquirrel'].each do |font|
-        url = "http://www.fontsquirrel.com/fontfacekit/#{font}"
+        url = "http://www.fontsquirrel.com/fonts/download/#{font}"
+        FileUtils.mkdir_p(@site.out(:tmp))
         dest = File.join(@site.out(:tmp), "#{font}.zip")
         begin
-          font_cache = File.join(@site[:cache], font)
+          font_cache = File.join(@site.out(:cache), font)
           unless File.directory?(font_cache)
             FileUtils.mkdir_p(font_cache)
 
@@ -132,12 +163,14 @@ class Engine
 
             Archive.read_open_filename(dest) do |zip|
               while entry = zip.next_header
+                p entry.pathname
                 case entry.pathname
                 when 'stylesheet.css'
                   File.open(File.join(font_cache, "#{font}.css"), 'w') do |f|
                     f.write(zip.read_data)
                   end
-                when /.*\.(woff)|(ttf)|(eot)|(svg)$}/
+                when /\.(woff|ttf|eot|svg|otf)$/
+                  p 'got font file'
                   File.open(File.join(font_cache, entry.pathname), 'w') do |f|
                     f.write(zip.read_data)
                   end
@@ -146,7 +179,8 @@ class Engine
             end
 
           end
-          FileUtils.cp(Dir[File.join(font_cache, '*')], @site[:output])
+          FileUtils.mkdir_p(@site.out(:fonts))
+          FileUtils.cp(Dir[File.join(font_cache, '*')], @site.out(:fonts))
         rescue => e
           wrn "Failed getting Font Squirrel font '#{font}'\n          #{e}"
         end
@@ -155,15 +189,24 @@ class Engine
   end
 
   def write_page(page)
-    msg "Writing page: #{page}"
+    msg "Processing page: #{page.base}"
 
-    unless @pages[page]
-      if self.render_page(page)
-				# Make sure the appropriate subdirectories exist in the output folder
-      	FileUtils.mkdir_p(page.out_dir)
-				# Write the HTML file
-        File.open(page.out, 'w') {|f| f.write(@pages[page]) }
+    # Make sure the appropriate subdirectories exist in the output folder
+    FileUtils.mkdir_p(page.out_dir)
+
+    if !page.collect.empty? && page.pagesize
+      pages = page.collect.map {|a| @site.sections[a].pages }.flatten.sort {|a,b| a <=> b }
+      collection = Collection.new(page, pages, page.pagesize)
+      r = 1..collection.pagecount
+      r.each do |index|
+        data = self.render_page(page, index, collection)
+        File.open(page.paginated_out(index), 'w') {|f| f.write(data) }
+        dbg "#{page.base}: wrote index #{index}", 1
       end
+    else
+      data = self.render_page(page)
+      File.open(page.out, 'w') {|f| f.write(data) }
+      dbg "#{page.base}: wrote page", 1
     end
 
     if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
@@ -178,7 +221,6 @@ class Engine
   end
 
   def write_site
-    # self.run_before_hook
     @site.pages.each do |page|
       self.write_page(page)
     end
@@ -202,11 +244,10 @@ class Engine
         end
       end
     end
-
-    # self.run_after_hook
-    FileUtils.rm_r(@site.out(:tmp))
   end
 
 end # class Engine
+
+
 end # module ARKWEB
 

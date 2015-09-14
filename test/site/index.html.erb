@@ -1,3 +1,8 @@
+---
+collect: [articles, posts, posts/scratch]
+pagesize: 4
+---
+
 <table>
 
 <tr>
@@ -53,4 +58,12 @@
 </tr>
 
 </table>
+
+<h1>Pagination:</h1>
+
+<% @collection.paginate(@index).each do |page| %>
+  <p><%= page.title %></p>
+<% end %>
+
+<%= @collection.links(@index) %>
 

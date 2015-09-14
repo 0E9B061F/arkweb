@@ -75,14 +75,12 @@ class Interface
   # Render an existing site directory, generating HTML files to the output
   # directory. This is called from Interface#run
   def render
-    msg "Processing site: #{@sitepath}"
     site = Site.new(self, @sitepath)
     if @conf.opt(:clobber)
-      [:output, :cache, :tmp].each do |p|
+      [:render, :cache, :tmp].each do |p|
         if File.directory?(site.out(p))
-          glob = File.join(site.out(p), '*')
           dbg "Clobbering directory: #{site.out(p)}"
-          FileUtils.rm_r(Dir[glob])
+          FileUtils.rm_r(site.out(p))
         end
       end
     end
@@ -90,9 +88,8 @@ class Interface
     if @conf.opt(:clean)
       [:cache, :tmp].each do |p|
         if File.directory?(site.out(p))
-          glob = File.join(site.out(p), '*')
           dbg "Cleaning directory: #{site.out(p)}"
-          FileUtils.rm_r(Dir[glob])
+          FileUtils.rm_r(site.out(p))
         end
       end
     end
