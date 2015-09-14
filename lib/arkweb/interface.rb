@@ -24,6 +24,9 @@ class Interface
       s.desc 'ARKWEB is a static website compiler'
       s.args 'site'
 
+      s.opt :version,
+      desc: 'Print version info and exit'
+
       s.opt :verbose, :v,
       desc: 'Run verbosely'
 
@@ -47,6 +50,11 @@ class Interface
       desc: 'Minify CSS and Javascript on rendering'
 
       s.raise_on_trailing
+    end
+
+    if @conf.opt(:version)
+      puts @identity
+      exit 0
     end
 
     @sitepath = @conf.arg(:site)
