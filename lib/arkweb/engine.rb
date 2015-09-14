@@ -50,8 +50,6 @@ class Engine
 
   def initialize(site, mode='html5')
     @site = site
-    @page = ''
-    @body = ''
     @pages = {}
     @template = @site.interface.root("templates/#{mode}.html.erb")
     @cache = {}
@@ -59,6 +57,7 @@ class Engine
     if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
+
     if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
@@ -120,16 +119,16 @@ class Engine
     self.evaluate_erb(@site_erb, :site => @site, :body => body, :section => page.section, :page => page)
   end
 
-  def copy_resources
-		# Make sure the appropriate subdirectories exist in the output folder
-    FileUtils.mkdir_p(@site.out(:aw))
-
+  def copy_images
     unless @site.images.empty?
       FileUtils.mkdir_p(@site.out(:images))
       dbg "Copying images: #{@site.in(:images)} -> #{@site.out(:images)}"
       FileUtils.cp_r(@site.images, @site.out(:images))
     end
+  end
 
+  def render_styles
+    FileUtils.mkdir_p(@site.out(:aw))
 		@site.styles.each do |name, style|
 			if style.is_css?
 				FileUtils.cp(style.working_path, style.output_path)
@@ -141,7 +140,9 @@ class Engine
 	      end
 			end
 		end
+  end
 
+  def download_fontsquirrel
     # Get FontSquirrel fonts
     if !@site.conf[:webfonts].empty? && ARKWEB.optional_gem('libarchive')
       @site.conf[:webfonts]['fontsquirrel'].each do |font|
@@ -163,14 +164,12 @@ class Engine
 
             Archive.read_open_filename(dest) do |zip|
               while entry = zip.next_header
-                p entry.pathname
                 case entry.pathname
                 when 'stylesheet.css'
                   File.open(File.join(font_cache, "#{font}.css"), 'w') do |f|
                     f.write(zip.read_data)
                   end
                 when /\.(woff|ttf|eot|svg|otf)$/
-                  p 'got font file'
                   File.open(File.join(font_cache, entry.pathname), 'w') do |f|
                     f.write(zip.read_data)
                   end
@@ -182,7 +181,8 @@ class Engine
           FileUtils.mkdir_p(@site.out(:fonts))
           FileUtils.cp(Dir[File.join(font_cache, '*')], @site.out(:fonts))
         rescue => e
-          wrn "Failed getting Font Squirrel font '#{font}'\n          #{e}"
+          wrn "Failed getting Font Squirrel font '#{font}'"
+          wrn e, 1
         end
       end
     end
@@ -208,42 +208,74 @@ class Engine
       File.open(page.out, 'w') {|f| f.write(data) }
       dbg "#{page.base}: wrote page", 1
     end
+  end
 
+  def validate
     if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
-      result = @validator.validate_file(page.out)
-      msg "Validating file: #{page.out}"
-      if result.errors.length > 0
-        result.errors.each {|e| msg e.to_s }
-      else
-        msg "Valid!"
+      @site.pages.each do |page|
+        result = @validator.validate_file(page.out)
+        if result.errors.length > 0
+          msg "#{page}: invalid!"
+          result.errors.each {|e| dbg Ark::Text.wrap(e.to_s, indent: 15, indent_after: true), 1 }
+        else
+          msg "#{page}: valid!"
+        end
+      end
+    end
+  end
+
+  def clobber
+    if @site.interface.conf.opt(:clobber)
+      [:render, :cache, :tmp].each do |p|
+        if File.directory?(@site.out(p))
+          dbg "Clobbering directory: #{@site.out(p)}"
+          FileUtils.rm_r(@site.out(p))
+        end
+      end
+    end
+  end
+
+  def clean
+    if @site.interface.conf.opt(:clean)
+      [:cache, :tmp].each do |p|
+        if File.directory?(@site.out(p))
+          dbg "Cleaning directory: #{@site.out(p)}"
+          FileUtils.rm_r(@site.out(p))
+        end
+      end
+    end
+  end
+
+  def minify
+    # XXX Don't forget to add javascript minification
+    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
+      @site.styles.each do |name, style|
+        begin
+          dbg "Minifying stylesheet: #{style}"
+          data = File.open(style.output_path, 'r') {|f| f.read }
+          pressed = @css_press.compress(data)
+          File.open(style.output_path, 'w') {|f| f.write(pressed) }
+        rescue => e
+          wrn "Failed to minify file: #{style}"
+          wrn e, 1
+        end
       end
     end
   end
 
   def write_site
+    self.clobber
+
     @site.pages.each do |page|
       self.write_page(page)
     end
-    self.copy_resources
 
-    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
-      Dir[File.join(@site[:output], '*.{css,js}')].each do |path|
-        begin
-          dbg "Minifying file: #{path}"
-          data = File.open(path, 'r') {|f| f.read }
-          out = case File.extname(path)
-          when '.css'
-            @css_press.compress(data)
-          when '.js'
-            @java_press.compress(data)
-          end
-          File.open(path, 'w') {|f| f.write(out) }
-        rescue => e
-          wrn "Failed to minify file: #{path}"
-          wrn e
-        end
-      end
-    end
+    self.render_styles
+    self.copy_images
+    self.download_fontsquirrel
+    self.minify
+    self.validate
+    self.clean
   end
 
 end # class Engine

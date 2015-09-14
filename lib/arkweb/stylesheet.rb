@@ -58,7 +58,7 @@ class Stylesheet
 
   # Represent this object as the working path to the given stylesheet
   def to_s()
-    return @working_path
+    return @server_path
   end
 
   # Return a link to this stylesheet

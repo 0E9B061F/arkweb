@@ -93,8 +93,12 @@ class Page
     return %Q(<a#{id}#{klass} href="#{link}">#{text}</a>)
   end
 
-  def to_s()
-    return @path
+  def to_s
+    return @link
+  end
+
+  def inspect
+    return "<Page:#{self}>"
   end
 
   def <=>(b)

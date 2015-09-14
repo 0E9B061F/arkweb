@@ -6,7 +6,7 @@ module ARKWEB
 class Interface
 
   # Initialize a new Interface object
-  def initialize()
+  def initialize(args=ARGV)
     @root    = File.absolute_path(File.join(File.dirname(__FILE__), '..', '..'))
     @project = 'ARKWEB'
     @freeze  = self.root('freeze.yaml')
@@ -19,7 +19,7 @@ class Interface
     end
     @identity = Ark::Git.version_line(default: @version, project: @project)
 
-    @conf = Ark::CLI.report do |s|
+    @conf = Ark::CLI.report(args) do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
       s.args 'site'
@@ -84,23 +84,7 @@ class Interface
   # directory. This is called from Interface#run
   def render
     site = Site.new(self, @sitepath)
-    if @conf.opt(:clobber)
-      [:render, :cache, :tmp].each do |p|
-        if File.directory?(site.out(p))
-          dbg "Clobbering directory: #{site.out(p)}"
-          FileUtils.rm_r(site.out(p))
-        end
-      end
-    end
     site.engine.write_site
-    if @conf.opt(:clean)
-      [:cache, :tmp].each do |p|
-        if File.directory?(site.out(p))
-          dbg "Cleaning directory: #{site.out(p)}"
-          FileUtils.rm_r(site.out(p))
-        end
-      end
-    end
     msg "Done! Wrote site to: #{site.out(:render)}"
   end
 
