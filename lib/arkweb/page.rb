@@ -32,7 +32,11 @@ class Page
     @text = File.open(@path, 'r') {|f| f.read }
     if (md = @text.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m))
       @contents = md.post_match
-      @metadata = YAML.load(md[:metadata])
+      yaml = md[:metadata]
+      box  = Engine::Sandbox.new(:site => @site)
+      erb  = ERB.new(yaml)
+      yaml = erb.result(box.bindings)
+      @metadata = YAML.load(yaml)
       @has_metadata = true
     else
       @contents = @text
