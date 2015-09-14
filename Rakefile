@@ -129,7 +129,7 @@ spec = Gem::Specification.new do |s|
   s.summary     = s.description
   s.homepage    = 'https://github.com/grimheart/arkweb'
 
-  s.files        = Dir.glob("{bin,lib,templates}/**/*") + ['LICENSE', 'README.md', H.freeze]
+  s.files        = Dir.glob("{bin,lib,templates,skel}/**/*") + ['LICENSE', 'README.md', H.freeze]
   s.bindir      = 'bin'
   s.executables  = ['ark']
   s.require_path = 'lib'
