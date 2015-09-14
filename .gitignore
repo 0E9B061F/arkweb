@@ -1,13 +1,12 @@
 .sass-cache/
 Gemfile.lock
 Session.vim
-PKGBUILD
 pkg/
 v/
-build/
 doc/
 test/site-init/
 .rspec
 test/site/ARKWEB/output
 test/site/ARKWEB/cache
+test/site/ARKWEB/tmp
 freeze.yaml
