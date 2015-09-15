@@ -144,7 +144,7 @@ Rake::RDocTask.new do |rd|
   rd.main       = 'README.md'
   rd.rdoc_dir   = 'doc'
   rd.title      = "#{H.identity} Documentation"
-  rd.rdoc_files = Dir['bin/*'] + Dir['lib/*']
+  rd.rdoc_files.include 'README.md', *(Dir['bin/*'] + Dir['lib/*'])
 end
 
 desc "Freeze version info"
