@@ -3,8 +3,14 @@
 __ARKWEB__ is a document processor suitable for creating flat websites from a
 collection of pages, templates, images, and the like.
 
+## Contents
 
+1. [Usage](#usage)
+1. [Site structure](#structure)
+1. [Using ERB in ARKWEB](#erb)
+1. [Pagination in ARKWEB](#pagination)
 
+<a id="usage"></a>
 # Usage
 
 `ark [options] SITEPATH`
@@ -20,9 +26,10 @@ liking.
 
 
 
+<a id="structure"></a>
 # Site structure
 
-A valid Site directory take sthe following form. The only required elements are
+A valid Site directory takes the following form. The only required elements are
 the header, `header.yaml`, the page template `page.html.erb`  and at least one
 page to render.
 
@@ -57,6 +64,7 @@ path/to/site/
 ```
 
 
+<a id="erb"></a>
 # Using ERB in ARKWEB
 
 An ERB pass can be added to any page file by appending '.erb' to the name. There
@@ -82,6 +90,9 @@ two additinal objects used for pagination will be available:
                    each pgae in the collection. `@index` is the current page
                    number.
 
+See [Pagination in ARKWEB](#pagination) for information on how to use these
+objects.
+
 
 ## ERB in templates
 
@@ -89,7 +100,8 @@ The two templates -- `page.html.erb` and `site.html.erb` -- have the same three
 objects available to them as pages (but no `@collection` or `@index` object),
 with an additional `@body` object. For `page.html.erb`, `@body` will contain the
 rendered page. For `site.html.erb`, `@body` will contain the page template
-rendered around the page.
+rendered around the page. In other words, `@body` will contain the content that
+the template is to be rendered around.
 
 
 ## ERB in YAML frontmatter
@@ -108,6 +120,7 @@ description: The main index for <%= @site.info(:title) %>
 The page object itself isn't available because the ERB pass occurs before the
 page object is fully initialized.
 
+<a id="pagination"></a>
 # Pagination in ARKWEB
 
 Pagination in ARKWEB works be re-rendering the same page multiple times with a
