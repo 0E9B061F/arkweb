@@ -63,11 +63,11 @@ class Engine
       @java_press = YUI::JavaScriptCompressor.new
     end
 
-		@page_erb = File.open(@site.in(:page_erb), 'r') {|f| f.read }
+    @page_erb = File.open(@site.in(:page_erb), 'r') {|f| f.read }
     @site_erb = if File.exist?(@site.in(:site_erb))
-			File.open(@site.in(:site_erb), 'r') {|f| f.read }
+      File.open(@site.in(:site_erb), 'r') {|f| f.read }
     else
-			File.open(@template, 'r') {|f| f.read }
+      File.open(@template, 'r') {|f| f.read }
     end
   end
   attr_reader :pages
@@ -129,17 +129,17 @@ class Engine
 
   def render_styles
     FileUtils.mkdir_p(@site.out(:aw))
-		@site.styles.each do |name, style|
-			if style.is_css?
-				FileUtils.cp(style.working_path, style.output_path)
+    @site.styles.each do |name, style|
+      if style.is_css?
+        FileUtils.cp(style.working_path, style.output_path)
       else
-	      # Only render if output doesn't already exist, or if output is outdated
-	      if !File.exist?(style.output_path) || File.mtime(style.working_path) > File.mtime(style.output_path)
-	        dbg "Rendering SASS file '#{style}' to '#{style.output_path}'"
-	        `sass -t compressed #{style.working_path} #{style.output_path}`
-	      end
-			end
-		end
+        # Only render if output doesn't already exist, or if output is outdated
+        if !File.exist?(style.output_path) || File.mtime(style.working_path) > File.mtime(style.output_path)
+          dbg "Rendering SASS file '#{style}' to '#{style.output_path}'"
+          `sass -t compressed #{style.working_path} #{style.output_path}`
+        end
+      end
+    end
   end
 
   def download_fontsquirrel
