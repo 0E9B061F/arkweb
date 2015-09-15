@@ -81,7 +81,9 @@ class Site
     @conf[:webfonts].each do |service,fonts|
       service = service.to_sym
       if FontService[service]
-        @font_styles += FontService[service][fonts]
+        unless fonts.empty?
+          @font_styles += FontService[service][fonts]
+        end
       else
         wrn "Unknown font provider '#{service}' for fonts: #{fonts}"
       end
