@@ -15,11 +15,17 @@ class Page
     @base        = File.basename(@path)
     @name        = @base[/^(.+?)\./, 1]
     @html        = "#{@name}.html"
-    @relative    = Pathname.new(@path).relative_path_from(Pathname.new(@site.root))
+    @relative    = Pathname.new(@path).relative_path_from(Pathname.new(@site.root)).to_s
     @relativedir = File.dirname(@relative)
-    @link        = File.join('/', @relativedir, @html)
-    @out         = File.join(@site.out(:render), @link)
-    @out_dir     = File.dirname(@out)
+
+    if @relativedir == '.'
+      @link = File.join('/', @html)
+    else
+      @link = File.join('/', @relativedir, @html)
+    end
+
+    @out     = File.join(@site.out(:render), @link)
+    @out_dir = File.dirname(@out)
 
     if @path[/\.erb$/]
       @erb  = true
