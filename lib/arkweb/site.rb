@@ -173,6 +173,12 @@ class Site
     return links.join("\n")
   end
 
+  def meta(name, content)
+    if name && content
+      return %Q(<meta name="#{name}" content="#{content}" />)
+    end
+  end
+
 end # class Site
 end # module ARKWEB
 
