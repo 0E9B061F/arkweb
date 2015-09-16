@@ -87,7 +87,7 @@ class Page
   end
 
   def paginated_link(index)
-    File.join('/', @relativedir, "#{self.paginated_name(index)}.html")
+    File.join(File.dirname(@link), "#{self.paginated_name(index)}.html")
   end
 
   def link_to(text: @title, id: nil, klass: nil, index: nil)
