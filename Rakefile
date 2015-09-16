@@ -77,7 +77,7 @@ class Helper
   end
 
   def gem_link
-    File.join(self.home, 'v', 'gem')
+    File.join(self.home, 'v', 'arkweb.gem')
   end
   def pkg_link
     File.join(self.home, 'v', 'pkg')
@@ -224,6 +224,11 @@ end
 
 desc "Clean all build files and rebuild"
 task :repack => [:clean, :pack]
+
+desc "Install the most recently built gem"
+task :install do
+  system "gem install #{H.gem_link}"
+end
 
 desc "Uninstall arkweb if installed"
 task :uninstall_pkg do
