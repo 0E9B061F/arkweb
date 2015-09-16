@@ -27,12 +27,12 @@ class Page
     @out     = File.join(@site.out(:render), @link)
     @out_dir = File.dirname(@out)
 
-    if @path[/\.erb$/]
+    if @base[/\.erb$/]
       @erb  = true
-      @type = @path[/^.+?\.(.+).erb$/, 1]
+      @type = @base[/^.+?\.(.+).erb$/, 1]
     else
       @erb  = false
-      @type = @path[/^.+?\.(.+)$/, 1]
+      @type = @base[/^.+?\.(.+)$/, 1]
     end
 
     @text = File.open(@path, 'r') {|f| f.read }
