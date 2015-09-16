@@ -22,7 +22,7 @@ class Interface
     @conf = Ark::CLI.report(args) do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
-      s.args "site:#{Dir.pwd}"
+      s.args "sitepath:#{Dir.pwd}"
 
       s.opt :version,
       desc: 'Print version info and exit'
@@ -57,7 +57,7 @@ class Interface
       exit 0
     end
 
-    @sitepath = @conf.arg(:site)
+    @sitepath = @conf.arg(:sitepath)
 
     Ark::Log::Conf[:verbose] = @conf.opt(:verbose)
     Ark::Log::Conf[:quiet]   = @conf.opt(:quiet)
