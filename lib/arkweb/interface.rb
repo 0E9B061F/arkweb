@@ -22,7 +22,7 @@ class Interface
     @conf = Ark::CLI.report(args) do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
-      s.args 'site'
+      s.args "site:#{Dir.pwd}"
 
       s.opt :version,
       desc: 'Print version info and exit'
