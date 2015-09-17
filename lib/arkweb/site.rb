@@ -16,7 +16,7 @@ class Site
 
   FontService = {
     :google => lambda {|fonts|
-      url = 'http://fonts.googleapis.com/css?family='
+      url = 'https://fonts.googleapis.com/css?family='
       fonts = fonts.join('|')
       return [url + fonts]
     },
