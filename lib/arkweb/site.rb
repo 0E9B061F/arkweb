@@ -57,6 +57,7 @@ class Site
     @conf[:desc]      = header['desc'] || header['description']
     @conf[:tags]      = header['tags'] || header['keywords'] || []
     @conf[:tags]      = @conf[:tags].join(", ")
+    @conf[:tags]      = nil if @conf[:tags].empty?
     @conf[:keywords]  = @conf[:tags]
     @conf[:xuacompat] = header['xuacompat'] || false
     @conf[:webfonts]  = {'google' => [], 'fontsquirrel' => []}
