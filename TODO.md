@@ -42,3 +42,6 @@ included, but only if the user requests it - this way normal ARKWEB-style pages
 can be included and rendered, but complete HTML files from other sources can
 also be included without getting wrapped in a template.
 
+before and after hooks - eg, to generate docs before compiling, or to commit the
+output to a repository
+
