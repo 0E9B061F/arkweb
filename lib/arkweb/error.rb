@@ -1,5 +1,5 @@
 module ARKWEB
-  class BrokenSiteError < StandardError
+  class BrokenSiteError < ArgumentError
   end
 end
 

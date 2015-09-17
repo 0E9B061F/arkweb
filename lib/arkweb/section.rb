@@ -1,6 +1,9 @@
 module ARKWEB
 
 class Section
+
+  IncludeFileName = 'include.yaml'
+
   def initialize(site, path)
     @site = site
     @path = path
@@ -9,6 +12,14 @@ class Section
     page_glob = File.join(@path, Site::Types[:pages])
     @pages = Dir[page_glob].map do |p|
       Page.new(@site, p, self)
+    end
+
+    # Look for an include file
+    include_file = File.join(@path, IncludeFileName)
+    if File.exist?(include_file)
+      @inclusions = YAML.load_file(include_file)
+    else
+      @inclusions = {}
     end
 
     # Order pages by ctime and give them an index
@@ -22,8 +33,11 @@ class Section
 
     # Path-related stuff
     @relative = Pathname.new(@path).relative_path_from(Pathname.new(@site.root))
+    @output_path = File.join(@site.output[:render], @relative)
   end
   attr_reader :site, :path, :pages, :title, :ordered_pages
+  attr_reader :inclusions
+  attr_reader :output_path
 
   def page_count()
     return @pages.length()
