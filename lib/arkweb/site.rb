@@ -35,12 +35,15 @@ class Site
 
     # Paths to special input directories and files
     @input = {}
-    @input[:arkweb]   = File.join(@root, InputARKWEB)
-    @input[:header]   = File.join(@input[:arkweb], 'header.yaml')
-    @input[:page_erb] = File.join(@input[:arkweb], 'page.html.erb')
-    @input[:site_erb] = File.join(@input[:arkweb], 'site.html.erb')
-    @input[:style]    = File.join(@input[:arkweb], 'site.{css,sass,scss}')
-    @input[:images]   = File.join(@input[:arkweb], 'images')
+    @input[:arkweb]       = File.join(@root, InputARKWEB)
+    @input[:header]       = File.join(@input[:arkweb], 'header.yaml')
+    @input[:page_erb]     = File.join(@input[:arkweb], 'page.html.erb')
+    @input[:site_erb]     = File.join(@input[:arkweb], 'site.html.erb')
+    @input[:style]        = File.join(@input[:arkweb], 'site.{css,sass,scss}')
+    @input[:images]       = File.join(@input[:arkweb], 'images')
+    @input[:hooks]        = File.join(@input[:arkweb], 'hook')
+    @input[:before_hooks] = File.join(@input[:hooks], 'before')
+    @input[:after_hooks]  = File.join(@input[:hooks], 'after')
 
     # Load the header
     begin
@@ -74,6 +77,10 @@ class Site
     @output[:aw]     = File.join(@output[:render], OutputARKWEB)
     @output[:images] = File.join(@output[:aw], 'images')
     @output[:fonts]  = File.join(@output[:aw], 'fonts')
+
+    # Collect paths to each hook
+    @before_hooks = Dir[File.join(@input[:before_hooks], '*')]
+    @after_hooks = Dir[File.join(@input[:after_hooks], '*')]
 
     @font_styles = []
     if @conf[:webfonts]['fontsquirrel']
@@ -136,6 +143,8 @@ class Site
   attr_reader :sections
   attr_reader :webfonts
   attr_reader :images
+  attr_reader :before_hooks
+  attr_reader :after_hooks
 
   def info(key)
     @conf[key.to_sym]

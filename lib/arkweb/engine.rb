@@ -280,7 +280,22 @@ class Engine
     end
   end
 
+  def run_before_hooks
+    @site.before_hooks.each do |hook|
+      dbg "Running hook: #{File.basename(hook)}"
+      system hook
+    end
+  end
+
+  def run_after_hooks
+    @site.after_hooks.each do |hook|
+      dbg "Running hook: #{File.basename(hook)}"
+      system hook
+    end
+  end
+
   def write_site
+    self.run_before_hooks
     self.clobber
 
     @site.pages.each do |page|
@@ -294,6 +309,7 @@ class Engine
     self.minify
     self.validate
     self.clean
+    self.run_after_hooks
   end
 
 end # class Engine
