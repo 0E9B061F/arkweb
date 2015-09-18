@@ -47,3 +47,6 @@ output to a repository
 
 favicon support
 
+for brevity, rename `ARKWEB` dir to `AW`, for consistency rename `aw` output dir
+to `AW`
+
