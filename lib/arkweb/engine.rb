@@ -285,15 +285,23 @@ class Engine
 
   def run_before_hooks
     @site.before_hooks.each do |hook|
-      dbg "Running hook: #{File.basename(hook)}"
-      system hook
+      basename = File.basename(hook)
+      dbg "Running hook: #{basename}"
+      output = `#{hook}`
+      output.split("\n").map {|line| "#{basename}: #{line}" }.each do |line|
+        dbg line, 1
+      end
     end
   end
 
   def run_after_hooks
     @site.after_hooks.each do |hook|
-      dbg "Running hook: #{File.basename(hook)}"
-      system hook
+      basename = File.basename(hook)
+      dbg "Running hook: #{basename}"
+      output = `#{hook}`
+      output.split("\n").map {|line| "#{basename}: #{line}" }.each do |line|
+        dbg line, 1
+      end
     end
   end
 
