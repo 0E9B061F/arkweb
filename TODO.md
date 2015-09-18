@@ -45,5 +45,5 @@ also be included without getting wrapped in a template.
 before and after hooks - eg, to generate docs before compiling, or to commit the
 output to a repository
 
-favicon support
+apple icon support, windows tile support
 
