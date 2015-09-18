@@ -270,10 +270,13 @@ class Engine
     @site.sections.each do |name, s|
       s.inclusions.each do |dest, target|
         dest = File.join(s.output_path, dest)
+        dbg "Including #{target} at #{dest}"
         unless File.exist?(target)
           raise EngineError, "Error including target '#{target}': target doesn't exist."
         end
-        dbg "Including #{target} at #{dest}"
+        if File.exist?(dest)
+          FileUtils.rm_r(dest)
+        end
         FileUtils.mkdir_p(File.dirname(dest))
         FileUtils.cp_r(target, dest)
       end
