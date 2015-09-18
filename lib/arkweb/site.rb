@@ -3,8 +3,8 @@ module ARKWEB
 class Site
 
   RootSectionName = 'root'
-  InputARKWEB     = 'ARKWEB'
-  OutputARKWEB    = 'aw'
+  InputARKWEB     = 'AW'
+  OutputARKWEB    = 'AW'
 
   Types = {
     :pages    => "*.{erb,md,html,wiki}",
