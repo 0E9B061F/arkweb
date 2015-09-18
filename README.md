@@ -5,19 +5,29 @@ collection of pages, templates, images, and the like.
 
 ## Contents
 
+1. [Installation](#installation)
 1. [Usage](#usage)
 1. [Site structure](#structure)
 1. [Using ERB in ARKWEB](#erb)
 1. [Pagination in ARKWEB](#pagination)
 
+<a id="installation"></a>
+# Installation
+
+`gem install arkweb`
+
 <a id="usage"></a>
 # Usage
 
-`ark [options] SITEPATH`
+The ARKWEB executable is named `ark`:
+
+`ark [OPTIONS...] [SITEPATH]`
 
 where `SITEPATH` is a path to a valid ARKWEB site directory, or a nonexistent
-path -- which will be initialized as a bare ARKWEB site. For a full list of
-options use `ark -h`
+path -- which will be initialized as a bare ARKWEB site. If no path is given,
+then the current directory will be used.
+
+For a full list of options use `ark -h`.
 
 To get started, give a nonexistent path to `ark` as the SITEPATH, e.g. `ark
 /tmp/nonexistent`. If the path does not exist it will be created as a directory,
