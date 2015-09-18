@@ -11,7 +11,8 @@ class Site
     :images   => "*.{jpg,jpeg,png,gif}",
     :style    => "*.{css,scss,sass}",
     :sass     => "*.{scss,sass}",
-    :css      => "*.css"
+    :css      => "*.css",
+    :icon     => "icon.{png,gif,ico,jpg,jpeg}"
   }
 
   FontService = {
@@ -71,16 +72,25 @@ class Site
 
     # Paths to where output files should be rendered
     @output = {}
-    @output[:tmp]    = header['tmp']   || File.join(@input[:arkweb], 'tmp')
-    @output[:cache]  = header['cache'] || File.join(@input[:arkweb], 'cache')
-    @output[:render] = @interface.conf.opt(:output) || header['output'] || File.join(@input[:arkweb], 'output')
-    @output[:aw]     = File.join(@output[:render], OutputARKWEB)
-    @output[:images] = File.join(@output[:aw], 'images')
-    @output[:fonts]  = File.join(@output[:aw], 'fonts')
+    @output[:tmp]      = header['tmp']   || File.join(@input[:arkweb], 'tmp')
+    @output[:cache]    = header['cache'] || File.join(@input[:arkweb], 'cache')
+    @output[:render]   = @interface.conf.opt(:output) || header['output'] || File.join(@input[:arkweb], 'output')
+    @output[:aw]       = File.join(@output[:render], OutputARKWEB)
+    @output[:images]   = File.join(@output[:aw], 'images')
+    @output[:fonts]    = File.join(@output[:aw], 'fonts')
+    @output[:favicons] = File.join(@output[:aw], 'favicons')
 
     # Collect paths to each hook
     @before_hooks = Dir[File.join(@input[:before_hooks], '*')]
     @after_hooks = Dir[File.join(@input[:after_hooks], '*')]
+
+    # Look for a favicon
+    favicon_path = Dir[File.join(@input[:arkweb], Types[:icon])].first
+    if favicon_path
+      @favicon = Favicon.new(self, favicon_path)
+    else
+      @favicon = nil
+    end
 
     @font_styles = []
     if @conf[:webfonts]['fontsquirrel']
@@ -145,6 +155,7 @@ class Site
   attr_reader :images
   attr_reader :before_hooks
   attr_reader :after_hooks
+  attr_reader :favicon
 
   def info(key)
     @conf[key.to_sym]
@@ -160,6 +171,10 @@ class Site
     @output[key.to_sym]
   end
 
+  def link_from_output(path)
+    Pathname.new(path).relative_path_from(Pathname.new(@output[:render])).to_s
+  end
+
   def img(name, alt: nil, id: nil, klass: nil)
     alt   = %Q( alt="#{alt}")     if alt
     id    = %Q( id="#{id}")       if id
@@ -171,16 +186,28 @@ class Site
     return %Q(<img#{id}#{klass}#{alt} src="#{link}" />)
   end
 
-  def link_styles()
+  def link_styles
     @styles.map {|n,s| s.head_link }.join("\n")
   end
 
-  def link_webfonts()
+  def link_webfonts
     links = []
     @font_styles.each do |path|
       links << %Q(<link href="#{path}" rel="stylesheet" type="text/css" />)
     end
     return links.join("\n")
+  end
+
+  def link_favicons
+    if !@favicon.nil?
+      links = []
+      @favicon.formats.each do |format|
+        unless format.format == 'ico'
+          links << %Q(<link rel="icon" type="image/#{format.format}" sizes="#{format.resolution}" href="#{format.link_path}">)
+        end
+      end
+      return links.join("\n")
+    end
   end
 
   def meta(name, content)
