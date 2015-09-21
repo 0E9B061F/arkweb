@@ -97,20 +97,20 @@ class Engine
 
   def render_page(page, index=nil, collection=nil)
     if index
-      dbg "#{page.base}: rendering index #{index}", 1
+      dbg "#{page.path.basename}: rendering index #{index}", 1
     end
     if page.has_erb?
-      dbg "#{page.base}: evaluating ERB", 1
+      dbg "#{page.path.basename}: evaluating ERB", 1
       markup = self.evaluate_erb(page.contents, :site => @site, :section => page.section, :page => page, :index => index, :collection => collection)
     else
       markup = page.contents
     end
     html = case page.type
     when 'md'
-      dbg "#{page.base}: evaluating Markdown", 1
+      dbg "#{page.path.basename}: evaluating Markdown", 1
       self.evaluate_md(markup)
     when 'wiki'
-      dbg "#{page.base}: evaluating MediaWiki markup", 1
+      dbg "#{page.path.basename}: evaluating MediaWiki markup", 1
       self.evaluate_wiki(markup)
     when 'html'
       markup
@@ -131,25 +131,25 @@ class Engine
   end
 
   def render_styles
-    FileUtils.mkdir_p(@site.out(:aw))
     @site.styles.each do |name, style|
+      FileUtils.mkdir_p(style.path.output.dirname)
       if style.is_css?
-        FileUtils.cp(style.working_path, style.output_path)
+        FileUtils.cp(style.path.input, style.path.output)
       else
         # Only render if output doesn't already exist, or if output is outdated
-        if !File.exist?(style.output_path) || File.mtime(style.working_path) > File.mtime(style.output_path)
-          dbg "Rendering SASS file '#{style}' to '#{style.output_path}'"
-          `sass -t compressed #{style.working_path} #{style.output_path}`
+        if style.path.changed?
+          dbg "Rendering SASS file '#{style}' to '#{style.path.output}'"
+          `sass -t compressed #{style.path.input} #{style.path.output}`
         end
       end
     end
   end
 
   def write_page(page)
-    msg "Processing page: #{page.base}"
+    msg "Processing page: #{page.path.basename}"
 
     # Make sure the appropriate subdirectories exist in the output folder
-    FileUtils.mkdir_p(page.out_dir)
+    FileUtils.mkdir_p(page.path.output.dirname)
 
     if !page.collect.empty? && page.pagesize
       pages = page.collect.map {|a| @site.sections[a].pages }.flatten.sort {|a,b| a <=> b }
@@ -157,13 +157,13 @@ class Engine
       r = 1..collection.pagecount
       r.each do |index|
         data = self.render_page(page, index, collection)
-        File.open(page.paginated_out(index), 'w') {|f| f.write(data) }
+        page.paginated_output(index).write(data)
         dbg "#{page.base}: wrote index #{index}", 1
       end
     else
       data = self.render_page(page)
-      File.open(page.out, 'w') {|f| f.write(data) }
-      dbg "#{page.base}: wrote page", 1
+      page.path.output.write(data)
+      dbg "#{page.path.basename}: wrote page", 1
     end
   end
 
@@ -209,9 +209,9 @@ class Engine
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"
-          data = File.open(style.output_path, 'r') {|f| f.read }
+          data = style.path.output.read
           pressed = @css_press.compress(data)
-          File.open(style.output_path, 'w') {|f| f.write(pressed) }
+          style.path.output.write(pressed)
         rescue => e
           wrn "Failed to minify file: #{style}"
           wrn e, 1

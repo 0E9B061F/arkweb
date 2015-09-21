@@ -1,41 +1,22 @@
 module ARKWEB
 
 class Page
-  def initialize(site, path, section)
+  def initialize(site, input_path, section)
     @site    = site
     @section = section
-    @path    = path
+    @path    = Path.new(@site, input_path, @site.out(:render), output_ext: 'html')
 
     @index = 0
 
-    @atime = File.atime(@path)
-    @ctime = File.ctime(@path)
-    @mtime = File.mtime(@path)
-
-    @base        = File.basename(@path)
-    @name        = @base[/^(.+?)\./, 1]
-    @html        = "#{@name}.html"
-    @relative    = Pathname.new(@path).relative_path_from(Pathname.new(@site.root)).to_s
-    @relativedir = File.dirname(@relative)
-
-    if @relativedir == '.'
-      @link = File.join('/', @html)
-    else
-      @link = File.join('/', @relativedir, @html)
-    end
-
-    @out     = File.join(@site.out(:render), @link)
-    @out_dir = File.dirname(@out)
-
-    if @base[/\.erb$/]
+    if @path.basename[/\.erb$/]
       @erb  = true
-      @type = @base[/^.+?\.(.+).erb$/, 1]
+      @type = @path.basename[/^.+?\.(.+).erb$/, 1]
     else
       @erb  = false
-      @type = @base[/^.+?\.(.+)$/, 1]
+      @type = @path.basename[/^.+?\.(.+)$/, 1]
     end
 
-    @text = File.open(@path, 'r') {|f| f.read }
+    @text = @path.input.read
     if (md = @text.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m))
       @contents = md.post_match
       yaml = md[:metadata]
@@ -50,7 +31,7 @@ class Page
       @has_metadata = false
     end
 
-    @title = @metadata['title'] || @name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
+    @title = @metadata['title'] || @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
     @tags = @metadata['keywords'] || @metadata['tags'] || []
     @collect = [@metadata['collect']].flatten.map(&:to_s)
     @pagesize = @metadata['pagesize']
@@ -58,12 +39,14 @@ class Page
     @description = @metadata['description'] || nil
 
   end
-  attr_reader :site, :path, :section
-  attr_reader :base, :name, :out, :type
-  attr_reader :out_dir, :title, :relativedir
-  attr_reader :link
-  attr_reader :contents, :has_metadata, :metadata
-  attr_reader :atime, :ctime, :mtime
+  attr_reader :site
+  attr_reader :path
+  attr_reader :section
+  attr_reader :type
+  attr_reader :title
+  attr_reader :contents
+  attr_reader :has_metadata
+  attr_reader :metadata
   attr_reader :collect
   attr_reader :pagesize
   attr_reader :description
@@ -73,38 +56,21 @@ class Page
     return @erb
   end
 
-  def paginated_name(index)
-    if index == 1
-      index = ''
-    else
-      index = "-#{index}"
-    end
-    return "#{@name}#{index}"
-  end
-
-  def paginated_out(index)
-    File.join(@site.out(:render), @relativedir, "#{self.paginated_name(index)}.html")
-  end
-
-  def paginated_link(index)
-    File.join(File.dirname(@link), "#{self.paginated_name(index)}.html")
-  end
-
   def link_to(text: @title, id: nil, klass: nil, index: nil)
     id    = %Q( id="#{id}")       if id
     klass = %Q( class="#{klass}") if klass
 
     if index
-      link = self.paginated_link(index)
+      link = @path.paginated_link(index)
     else
-      link = @link
+      link = @path.link
     end
 
     return %Q(<a#{id}#{klass} href="#{link}">#{text}</a>)
   end
 
   def to_s
-    return @link
+    return @path.link
   end
 
   def inspect
@@ -112,7 +78,7 @@ class Page
   end
 
   def <=>(b)
-    @ctime <=> b.ctime
+    @path.input.ctime <=> b.path.input.ctime
   end
 end
 

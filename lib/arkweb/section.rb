@@ -23,7 +23,7 @@ class Section
     end
 
     # Order pages by ctime and give them an index
-    @ordered_pages = @pages.sort {|a,b| a.ctime <=> b.ctime }
+    @ordered_pages = @pages.sort {|a,b| a <=> b }
     @ordered_pages.each_with_index do |page,i|
       page.index = i + 1
     end
