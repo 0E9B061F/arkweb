@@ -19,8 +19,6 @@ directly called. add warnings in.
 add header configuration value for google analytics key, which automatically
 inserts the google analytics script with the key
 
-add deploy function using rsync and ssh, configured in the site header
-
 an automatic index should be created for sections if one doesnt exist, which
 would list subsections and pages
 
@@ -41,9 +39,6 @@ include feature should support full rendering for whatever files will be
 included, but only if the user requests it - this way normal ARKWEB-style pages
 can be included and rendered, but complete HTML files from other sources can
 also be included without getting wrapped in a template.
-
-before and after hooks - eg, to generate docs before compiling, or to commit the
-output to a repository
 
 apple icon support, windows tile support
 
