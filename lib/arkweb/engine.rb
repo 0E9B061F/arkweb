@@ -320,6 +320,23 @@ class Engine
     end
   end
 
+  def deploy
+    addr = @site.info(:deploy)
+    if addr
+      msg "Deploying to #{addr['host']}"
+      if addr['ssh']
+        if addr['port']
+          port = "-p #{addr['port']}"
+        else
+          port = ''
+        end
+        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:render)}/ #{addr['host']}`
+      else
+        `rsync -az --delete-before #{@site.out(:render)}/ #{addr['host']}`
+      end
+    end
+  end
+
   def write_site
     self.run_before_hooks
     self.clobber
@@ -335,8 +352,9 @@ class Engine
     self.copy_inclusions
     self.minify
     self.validate
-    self.clean
     self.run_after_hooks
+    self.deploy
+    self.clean
   end
 
 end # class Engine
