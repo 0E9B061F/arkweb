@@ -309,9 +309,9 @@ class Engine
     if !@site.favicon.nil? && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
       FileUtils.mkdir_p(@site.out(:favicons))
-      img = MiniMagick::Image.open(@site.favicon.input_path)
       @site.favicon.formats.each do |format|
         dbg "Generating favicon: #{format.name}", 1
+        img = MiniMagick::Image.open(@site.favicon.input_path)
         img.resize(format.resolution)
         img.format(format.format)
         img.write(format.output_path)
