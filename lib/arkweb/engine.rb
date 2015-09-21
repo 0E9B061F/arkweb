@@ -145,52 +145,6 @@ class Engine
     end
   end
 
-  def download_fontsquirrel
-    # Get FontSquirrel fonts
-    if !@site.info(:webfonts)['fontsquirrel'].empty? && ARKWEB.optional_gem('libarchive')
-      @site.info(:webfonts)['fontsquirrel'].each do |font|
-        url = "http://www.fontsquirrel.com/fonts/download/#{font}"
-        FileUtils.mkdir_p(@site.out(:tmp))
-        dest = File.join(@site.out(:tmp), "#{font}.zip")
-        begin
-          font_cache = File.join(@site.out(:cache), font)
-          unless File.directory?(font_cache)
-            FileUtils.mkdir_p(font_cache)
-
-            dbg "Downloading Font Squirrel font: #{font}"
-
-            open(url) do |src|                                   # XXX switch to a different HTTP client?
-              File.open(dest, 'wb') {|f| f.write(src.read) }
-            end
-
-            dbg "Extracting and caching font: #{font}"
-
-            Archive.read_open_filename(dest) do |zip|
-              while entry = zip.next_header
-                case entry.pathname
-                when 'stylesheet.css'
-                  File.open(File.join(font_cache, "#{font}.css"), 'w') do |f|
-                    f.write(zip.read_data)
-                  end
-                when /\.(woff|ttf|eot|svg|otf)$/
-                  File.open(File.join(font_cache, entry.pathname), 'w') do |f|
-                    f.write(zip.read_data)
-                  end
-                end
-              end
-            end
-
-          end
-          FileUtils.mkdir_p(@site.out(:fonts))
-          FileUtils.cp(Dir[File.join(font_cache, '*')], @site.out(:fonts))
-        rescue => e
-          wrn "Failed getting Font Squirrel font '#{font}'"
-          wrn e, 1
-        end
-      end
-    end
-  end
-
   def write_page(page)
     msg "Processing page: #{page.base}"
 
@@ -348,7 +302,6 @@ class Engine
     self.generate_favicons
     self.render_styles
     self.copy_images
-    self.download_fontsquirrel
     self.copy_inclusions
     self.minify
     self.validate

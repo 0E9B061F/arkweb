@@ -15,17 +15,6 @@ class Site
     :icon     => "icon.{png,gif,ico,jpg,jpeg}"
   }
 
-  FontService = {
-    :google => lambda {|fonts|
-      url = 'https://fonts.googleapis.com/css?family='
-      fonts = fonts.join('|')
-      return [url + fonts]
-    },
-    :fontsquirrel => lambda {|fonts|
-      fonts.map {|font| File.join('/', OutputARKWEB, "#{font}.css") }
-    }
-  }
-
   def initialize(interface, root, conf=nil)
 
     # Basics
@@ -61,7 +50,7 @@ class Site
       :author => false,
       :desc => false,
       :keywords => false,
-      :webfonts => false,
+      :google_fonts => false,
       :xuacompat => false,
       :analytics_key => false,
       :clean => false,
@@ -77,11 +66,6 @@ class Site
     @conf = defaults.merge(opts) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf.select! {|k,v| defaults.keys.member?(k) }
-    puts @conf.map {|k,v| "#{k} => #{v}" }.join("\n")
-
-    wf = Hash.new {|h,k| h[k] = [] }
-    wf.merge!(@conf[:webfonts]) if @conf[:webfonts]
-    @conf[:webfonts] = wf
 
     # Finish with input paths
     @input[:styles] = header['styles'] || Dir[File.join(@input[:arkweb], Types[:style])]
@@ -106,21 +90,6 @@ class Site
       @favicon = Favicon.new(self, favicon_path)
     else
       @favicon = nil
-    end
-
-    @font_styles = []
-    if @conf[:webfonts]['fontsquirrel']
-      @conf[:webfonts]['fontsquirrel'].map! {|f| f.tr(' ', '-') }
-    end
-    @conf[:webfonts].each do |service,fonts|
-      service = service.to_sym
-      if FontService[service]
-        unless fonts.empty?
-          @font_styles += FontService[service][fonts]
-        end
-      else
-        wrn "Unknown font provider '#{service}' for fonts: #{fonts}"
-      end
     end
 
     @images = Dir[File.join(@input[:images], Types[:images])]
@@ -209,12 +178,12 @@ class Site
     @styles.map {|n,s| s.head_link }.join("\n")
   end
 
-  def link_webfonts
-    links = []
-    @font_styles.each do |path|
-      links << %Q(<link href="#{path}" rel="stylesheet" type="text/css" />)
+  def link_google_fonts()
+    if @conf[:google_fonts]
+      fonts = @conf[:google_fonts].join('|')
+      url = "https://fonts.googleapis.com/css?family=#{fonts}"
+      return %Q(<link href="#{url}" rel="stylesheet" type="text/css" />)
     end
-    return links.join("\n")
   end
 
   def link_favicons

@@ -8,6 +8,4 @@ gem 'wikicloth'
 gem 'sass'
 gem 'yui-compressor'
 gem 'w3c_validators'
-gem 'libarchive'
-
 
