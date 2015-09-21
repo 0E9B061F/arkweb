@@ -54,14 +54,9 @@ class Interface
 
     Ark::Log::Conf[:verbose] = @conf.opt(:verbose)
     Ark::Log::Conf[:quiet]   = @conf.opt(:quiet)
-
-    require 'yui/compressor' if @conf.opt(:minify)
-    require 'w3c_validators' if @conf.opt(:validate)
   end
 
   attr_reader :version
-
-  attr_reader :conf
 
   attr_reader :identity
 
@@ -76,7 +71,7 @@ class Interface
   # Render an existing site directory, generating HTML files to the output
   # directory. This is called from Interface#run
   def render
-    site = Site.new(self, @sitepath)
+    site = Site.new(self, @sitepath, @conf)
     site.engine.write_site
     msg "Done! Wrote site to: #{site.out(:render)}"
   end

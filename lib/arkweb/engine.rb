@@ -57,11 +57,11 @@ class Engine
     @template = @site.interface.root("templates/#{mode}.html.erb")
     @cache = {}
 
-    if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.info(:validate) && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
 
-    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.info(:minify) && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
     end
@@ -147,8 +147,8 @@ class Engine
 
   def download_fontsquirrel
     # Get FontSquirrel fonts
-    if !@site.conf[:webfonts].empty? && ARKWEB.optional_gem('libarchive')
-      @site.conf[:webfonts]['fontsquirrel'].each do |font|
+    if !@site.info(:webfonts)['fontsquirrel'].empty? && ARKWEB.optional_gem('libarchive')
+      @site.info(:webfonts)['fontsquirrel'].each do |font|
         url = "http://www.fontsquirrel.com/fonts/download/#{font}"
         FileUtils.mkdir_p(@site.out(:tmp))
         dest = File.join(@site.out(:tmp), "#{font}.zip")
@@ -214,7 +214,7 @@ class Engine
   end
 
   def validate
-    if @site.interface.conf.opt(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.info(:validate) && ARKWEB.optional_gem('w3c_validators')
       @site.pages.each do |page|
         result = @validator.validate_file(page.out)
         if result.errors.length > 0
@@ -228,7 +228,7 @@ class Engine
   end
 
   def clobber
-    if @site.interface.conf.opt(:clobber)
+    if @site.info(:clobber)
       [:render, :cache, :tmp].each do |p|
         if File.directory?(@site.out(p))
           dbg "Clobbering directory: #{@site.out(p)}"
@@ -239,7 +239,7 @@ class Engine
   end
 
   def clean
-    if @site.interface.conf.opt(:clean)
+    if @site.info(:clean)
       [:cache, :tmp].each do |p|
         if File.directory?(@site.out(p))
           dbg "Cleaning directory: #{@site.out(p)}"
@@ -251,7 +251,7 @@ class Engine
 
   def minify
     # XXX Don't forget to add javascript minification
-    if @site.interface.conf.opt(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.info(:minify) && ARKWEB.optional_gem('yui/compressor')
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"

@@ -26,7 +26,7 @@ class Site
     }
   }
 
-  def initialize(interface, root)
+  def initialize(interface, root, conf=nil)
 
     # Basics
     @interface = interface
@@ -53,28 +53,43 @@ class Site
       raise BrokenSiteError,
       "While loading site '#{@root}': #{e}\nHeader file '#{@input[:header]}' is missing or malformed."
     end
+    header = Hash[header.map {|k,v| [k.to_sym, v] }]
 
     # Configure details about the site
-    @conf = {}
-    @conf[:author]    = header['author']
-    @conf[:title]     = header['title']
-    @conf[:desc]      = header['desc'] || header['description']
-    @conf[:tags]      = header['tags'] || header['keywords'] || []
-    @conf[:tags]      = @conf[:tags].join(", ")
-    @conf[:tags]      = nil if @conf[:tags].empty?
-    @conf[:keywords]  = @conf[:tags]
-    @conf[:xuacompat] = header['xuacompat'] || false
-    @conf[:webfonts]  = {'google' => [], 'fontsquirrel' => []}
-    @conf[:webfonts]  = @conf[:webfonts].merge(header['webfonts']) if header['webfonts']
+    defaults = {
+      :title => 'Untitled',
+      :author => false,
+      :desc => false,
+      :keywords => false,
+      :webfonts => false,
+      :xuacompat => false,
+      :clean => false,
+      :clobber => false,
+      :minify => false,
+      :validate => false,
+      :deploy => false,
+      :output => File.join(@input[:arkweb], 'output'),
+      :tmp => File.join(@input[:arkweb], 'tmp'),
+      :cache => File.join(@input[:arkweb], 'cache'),
+    }
+    opts = Hash[conf.opts.map {|k,v| [k.to_sym, v] }]
+    @conf = defaults.merge(opts) {|k,old,new| new && !new.to_s.empty? ? new : old }
+    @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
+    @conf.select! {|k,v| defaults.keys.member?(k) }
+    puts @conf.map {|k,v| "#{k} => #{v}" }.join("\n")
+
+    wf = Hash.new {|h,k| h[k] = [] }
+    wf.merge!(@conf[:webfonts]) if @conf[:webfonts]
+    @conf[:webfonts] = wf
 
     # Finish with input paths
     @input[:styles] = header['styles'] || Dir[File.join(@input[:arkweb], Types[:style])]
 
     # Paths to where output files should be rendered
     @output = {}
-    @output[:tmp]      = header['tmp']   || File.join(@input[:arkweb], 'tmp')
-    @output[:cache]    = header['cache'] || File.join(@input[:arkweb], 'cache')
-    @output[:render]   = @interface.conf.opt(:output) || header['output'] || File.join(@input[:arkweb], 'output')
+    @output[:tmp]      = @conf[:tmp]
+    @output[:cache]    = @conf[:cache]
+    @output[:render]   = @conf[:output]
     @output[:aw]       = File.join(@output[:render], OutputARKWEB)
     @output[:images]   = File.join(@output[:aw], 'images')
     @output[:fonts]    = File.join(@output[:aw], 'fonts')
