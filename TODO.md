@@ -1,5 +1,3 @@
-should be able to set default options for a site in its header
-
 have a special mode for images, where an image in a dir is treated as a page. a
 description can be attached, so image.jpg would have image.md.
 image pages are rendered using a special image.html.erb template
@@ -15,9 +13,6 @@ been solved in other ways already.
 
 make optional dependencies more verbose, especially when their feature are
 directly called. add warnings in.
-
-add header configuration value for google analytics key, which automatically
-inserts the google analytics script with the key
 
 an automatic index should be created for sections if one doesnt exist, which
 would list subsections and pages
