@@ -15,9 +15,9 @@ class Interface
       f = YAML.load_file(@freeze)
       @version  = f['version']
     else
-      @version  = Ark::Git.version(default: 'DEV VERSION')
+      @version  = Ark::Git.version(@root, default: 'DEV VERSION')
     end
-    @identity = Ark::Git.version_line(default: @version, project: @project)
+    @identity = Ark::Git.version_line(@root, default: @version, project: @project)
 
     @conf = Ark::CLI.report(args) do |s|
       s.name 'ark'
