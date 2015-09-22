@@ -269,7 +269,7 @@ class Engine
         img.resize(format.resolution)
         img.format(format.format)
         img.write(format.path.output)
-        File.chmod(0644, format.path.output) # minimagick writes files as 0400 for some reason
+        format.path.output.chmod(0644)
       end
     end
   end
