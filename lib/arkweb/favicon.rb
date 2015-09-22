@@ -37,6 +37,12 @@ class Favicon
     output_dir = output_dir || @site.out(:favicons)
     @formats << FaviconFormat.new(@site, @input_path, output_dir, ext, resolution, name)
   end
+
+  public
+
+  def inspect
+    return "#<Favicon:#{@input_path.basename}>"
+  end
 end
 
 end # module ARKWEB

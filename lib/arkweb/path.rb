@@ -49,6 +49,10 @@ class Path
   def changed?
     return !@output.exist? || @input.mtime > @output.mtime
   end
+
+  def inspect
+    return "#<Path:#{@link}>"
+  end
 end
 
 end # module ARKWEB

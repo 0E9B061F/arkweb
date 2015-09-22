@@ -25,6 +25,10 @@ class Application
       return @root.join(*args)
     end
   end
+
+  def inspect
+    return "#<Application:#{@identity}>"
+  end
 end
 
 end # module ARKWEB

@@ -37,7 +37,6 @@ class Page
     @pagesize = @metadata['pagesize']
     @pagesize = @pagesize.to_i if @pagesize
     @description = @metadata['description'] || nil
-
   end
   attr_reader :site
   attr_reader :path
@@ -74,7 +73,7 @@ class Page
   end
 
   def inspect
-    return "<Page:#{self}>"
+    return "#<Page:#{self}>"
   end
 
   def <=>(b)
@@ -112,6 +111,10 @@ class Collection
       end
     end
     links.join("\n")
+  end
+
+  def inspect
+    return "#<Collection:#{@page.collect.join(",")}>"
   end
 end
 

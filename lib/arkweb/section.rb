@@ -49,6 +49,10 @@ class Section
     klass = %Q( class="#{klass}") if klass
     return %Q(<a#{id}#{klass} href="#{@relative}">#{text}</a>)
   end
+
+  def inspect
+    return "#<Section:#{@path.link}>"
+  end
 end
 
 end # module ARKWEB

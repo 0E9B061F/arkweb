@@ -62,8 +62,11 @@ class Site
       :tmp => false,
       :cache => false
     }
-    opts = Hash[conf.opts.map {|k,v| [k.to_sym, v] }]
-    @conf = defaults.merge(opts) {|k,old,new| new && !new.to_s.empty? ? new : old }
+    @conf = defaults
+    if conf
+      opts = Hash[conf.opts.map {|k,v| [k.to_sym, v] }]
+      @conf = @conf.merge(opts) {|k,old,new| new && !new.to_s.empty? ? new : old }
+    end
     @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf.select! {|k,v| defaults.keys.member?(k) }
 
@@ -238,6 +241,10 @@ class Site
     end
   end
 
+  def inspect
+    return "#<Site:#{@conf[:title]}>"
+  end
 end # class Site
+
 end # module ARKWEB
 

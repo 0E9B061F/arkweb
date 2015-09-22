@@ -45,6 +45,10 @@ class Stylesheet
   def head_link()
     return %Q(<link href="#{@path.link}" rel="stylesheet" type="text/css" />)
   end
+
+  def inspect
+    return "#<Stylesheet:#{@name}>"
+  end
 end
 
 end # module ARKWEB
