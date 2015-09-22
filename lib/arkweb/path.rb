@@ -38,7 +38,7 @@ class Path
   end
 
   def paginated_link(index)
-    out = self.paginated_out(index)
+    out = self.paginated_output(index)
     out = out.relative_path_from(@render_root)
     return "/#{out}"
   end

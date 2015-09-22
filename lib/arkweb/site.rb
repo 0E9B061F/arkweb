@@ -15,25 +15,25 @@ class Site
     :icon     => "icon.{png,gif,ico,jpg,jpeg}"
   }
 
-  def initialize(interface, root, conf=nil)
+  def initialize(root, conf=nil)
 
     # Basics
-    @interface = interface
-    raise BrokenSiteError unless File.directory?(root)
-    @root = root
-    @name = File.basename(root)
+    @app = Application.new
+    @root = Pathname.new(root)
+    raise BrokenSiteError unless @root.directory?
+    @name = @root.basename
 
     # Paths to special input directories and files
     @input = {}
-    @input[:arkweb]       = File.join(@root, InputARKWEB)
-    @input[:header]       = File.join(@input[:arkweb], 'header.yaml')
-    @input[:page_erb]     = File.join(@input[:arkweb], 'page.html.erb')
-    @input[:site_erb]     = File.join(@input[:arkweb], 'site.html.erb')
-    @input[:style]        = File.join(@input[:arkweb], 'site.{css,sass,scss}')
-    @input[:images]       = File.join(@input[:arkweb], 'images')
-    @input[:hooks]        = File.join(@input[:arkweb], 'hook')
-    @input[:before_hooks] = File.join(@input[:hooks], 'before')
-    @input[:after_hooks]  = File.join(@input[:hooks], 'after')
+    @input[:arkweb]       = @root + InputARKWEB
+    @input[:header]       = @input[:arkweb].join('header.yaml')
+    @input[:page_erb]     = @input[:arkweb].join('page.html.erb')
+    @input[:site_erb]     = @input[:arkweb].join('site.html.erb')
+    @input[:style]        = @input[:arkweb].join('site.{css,sass,scss}')
+    @input[:images]       = @input[:arkweb].join('images')
+    @input[:hooks]        = @input[:arkweb].join('hook')
+    @input[:before_hooks] = @input[:hooks].join('before')
+    @input[:after_hooks]  = @input[:hooks].join('after')
 
     # Load the header
     begin
@@ -58,43 +58,60 @@ class Site
       :minify => false,
       :validate => false,
       :deploy => false,
-      :output => File.join(@input[:arkweb], 'output'),
-      :tmp => File.join(@input[:arkweb], 'tmp'),
-      :cache => File.join(@input[:arkweb], 'cache'),
+      :output => false,
+      :tmp => false,
+      :cache => false
     }
     opts = Hash[conf.opts.map {|k,v| [k.to_sym, v] }]
     @conf = defaults.merge(opts) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf.select! {|k,v| defaults.keys.member?(k) }
 
-    # Finish with input paths
-    @input[:styles] = header['styles'] || Dir[File.join(@input[:arkweb], Types[:style])]
-
     # Paths to where output files should be rendered
     @output = {}
-    @output[:tmp]      = @conf[:tmp]
-    @output[:cache]    = @conf[:cache]
-    @output[:render]   = @conf[:output]
-    @output[:aw]       = File.join(@output[:render], OutputARKWEB)
-    @output[:images]   = File.join(@output[:aw], 'images')
-    @output[:fonts]    = File.join(@output[:aw], 'fonts')
-    @output[:favicons] = File.join(@output[:aw], 'favicons')
+    @output[:tmp]      = @conf[:tmp]    || @input[:arkweb].join('tmp')
+    @output[:cache]    = @conf[:cache]  || @input[:arkweb].join('cache')
+    @output[:render]   = @conf[:output] || @input[:arkweb].join('output')
+    @output[:aw]       = @output[:render].join(OutputARKWEB)
+    @output[:images]   = @output[:aw].join('images')
+    @output[:fonts]    = @output[:aw].join('fonts')
+    @output[:favicons] = @output[:aw].join('favicons')
+
+    # Decide what templates we'll be using
+    if @input[:site_erb].exist?
+      @site_template = @input[:site_erb]
+    else
+      @site_template = @app.root('templates/site.html.erb')
+    end
+    if @input[:page_erb].exist?
+      @page_template = @input[:page_erb]
+    else
+      @page_template = false
+    end
 
     # Collect paths to each hook
-    @before_hooks = Dir[File.join(@input[:before_hooks], '*')]
-    @after_hooks = Dir[File.join(@input[:after_hooks], '*')]
+    @before_hooks = []
+    @after_hooks = []
+    if @input[:before_hooks].exist?
+      @before_hooks = @input[:before_hooks].children.select {|c| c.executable? }
+    end
+    if @input[:after_hooks].exist?
+      @after_hooks = @input[:after_hooks].children.select {|c| c.executable? }
+    end
 
     # Look for a favicon
-    favicon_path = Dir[File.join(@input[:arkweb], Types[:icon])].first
+    favicon_path = @input[:arkweb].glob(Types[:icon]).first
     if favicon_path
       @favicon = Favicon.new(self, favicon_path)
     else
       @favicon = nil
     end
+   
+    # Get all images in the image dir
+    @images = @input[:images].glob(Types[:images])
 
-    @images = Dir[File.join(@input[:images], Types[:images])]
-
-    sheets = Dir[File.join(@input[:arkweb], Types[:style])]
+    # Get all stylesheets in the AW dir
+    sheets = @input[:arkweb].glob(Types[:style])
     @styles = {}
     sheets.each do |s|
       s = Stylesheet.new(self, s)
@@ -104,17 +121,22 @@ class Site
     # Return a list of sections, which are any subdirectories excluding special subdirectories
     # The root directory is itself a section
     # Each section will later be scanned for pages and media, and then rendered
-    subdirs = Dir[File.join(@root, '**/')].reject do |path|
-      path.start_with?(@input[:arkweb])
+    subdirs = []
+    @root.find do |path|
+      if path.directory?
+        if path == @input[:arkweb] || path.basename.to_s[/^\./]
+          Find.prune
+        else
+          subdirs << path
+        end
+      end
     end
     @sections = {}
     @pages = []
     subdirs.each do |path|
       s = Section.new(self, path)
-      address = Pathname.new(path).relative_path_from(Pathname.new(@root)).to_s
-      address = address.sub(/^[\.\/]+/, '')
-      address = address.sub(/\/+$/, '')
-      address = RootSectionName if address == ''
+      address = path.relative_path_from(@root).to_s
+      address = RootSectionName if address == '.'
       @sections[address] = s
       @pages += s.pages
     end
@@ -126,7 +148,7 @@ class Site
     @engine = Engine.new(self)
   end
 
-  attr_reader :interface
+  attr_reader :app
   attr_reader :engine
   attr_reader :root
   attr_reader :name
@@ -141,6 +163,8 @@ class Site
   attr_reader :before_hooks
   attr_reader :after_hooks
   attr_reader :favicon
+  attr_reader :site_template
+  attr_reader :page_template
 
   def info(key)
     @conf[key.to_sym]
@@ -161,8 +185,8 @@ class Site
     id    = %Q( id="#{id}")       if id
     klass = %Q( class="#{klass}") if klass
 
-    link = Pathname.new(@output[:images]).relative_path_from(Pathname.new(@output[:render]))
-    link = File.join('/', link, name)
+    link = @output[:images].relative_path_from(@output[:render]) + name
+    link = "/#{link}"
 
     return %Q(<img#{id}#{klass}#{alt} src="#{link}" />)
   end

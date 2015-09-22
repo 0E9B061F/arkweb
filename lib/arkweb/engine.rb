@@ -1,38 +1,6 @@
 module ARKWEB
 
 
-class Collection
-  def initialize(page, pages, pagesize)
-    @page      = page
-    @pages     = pages
-    @pagesize  = pagesize
-    @pagecount = (@pages.length / @pagesize.to_f).ceil
-    @range     = (1..@pagecount)
-  end
-
-  attr_reader :range
-  attr_reader :pagecount
-
-  def paginate(index)
-    index = index - 1
-    first = index * @pagesize
-    last  = first + (@pagesize - 1)
-    @pages[first..last]
-  end
-
-  def links(index)
-    links = []
-    @range.each do |i|
-      if i == index
-        links << "<span class=\"pagination pagination-current\">#{index}</span>"
-      else
-        links << @page.link_to(text: i, klass: 'pagination pagination-link', index: i)
-      end
-    end
-    links.join("\n")
-  end
-end
-
 
 class Engine
 
@@ -51,11 +19,8 @@ class Engine
     end
   end
 
-  def initialize(site, mode='html5')
+  def initialize(site)
     @site = site
-    @pages = {}
-    @template = @site.interface.root("templates/#{mode}.html.erb")
-    @cache = {}
 
     if @site.info(:validate) && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
@@ -66,18 +31,14 @@ class Engine
       @java_press = YUI::JavaScriptCompressor.new
     end
 
-    @page_erb = File.open(@site.in(:page_erb), 'r') {|f| f.read }
-    @site_erb = if File.exist?(@site.in(:site_erb))
-      File.open(@site.in(:site_erb), 'r') {|f| f.read }
+    if @site.page_template
+      @page_erb = @site.page_template.read
     else
-      File.open(@template, 'r') {|f| f.read }
+      @page_erb = false
     end
+    @site_erb = @site.site_template.read
   end
   attr_reader :pages
-
-  def read(file)
-    @cache[file] ||= File.open(file, 'r') {|f| f.read }
-  end
 
   def evaluate_erb(data, env)
     box = Sandbox.new(env)
@@ -105,7 +66,7 @@ class Engine
     else
       markup = page.contents
     end
-    html = case page.type
+    body = case page.type
     when 'md'
       dbg "#{page.path.basename}: evaluating Markdown", 1
       self.evaluate_md(markup)
@@ -118,8 +79,20 @@ class Engine
       # XXX
       raise "Cannot render page type: #{page.type}"
     end
-    body = self.evaluate_erb(@page_erb, :site => @site, :body => html, :section => page.section, :page => page)
-    self.evaluate_erb(@site_erb, :site => @site, :body => body, :section => page.section, :page => page)
+    if @page_erb
+      body = self.evaluate_erb(@page_erb,
+        :site => @site,
+        :body => body,
+        :section => page.section,
+        :page => page
+      )
+    end
+    self.evaluate_erb(@site_erb,
+      :site => @site,
+      :body => body,
+      :section => page.section,
+      :page => page
+    )
   end
 
   def copy_images
@@ -157,8 +130,8 @@ class Engine
       r = 1..collection.pagecount
       r.each do |index|
         data = self.render_page(page, index, collection)
-        page.paginated_output(index).write(data)
-        dbg "#{page.base}: wrote index #{index}", 1
+        page.path.paginated_output(index).write(data)
+        dbg "#{page.path.basename}: wrote index #{index}", 1
       end
     else
       data = self.render_page(page)
@@ -223,15 +196,14 @@ class Engine
   def copy_inclusions
     @site.sections.each do |name, s|
       s.inclusions.each do |dest, target|
-        dest = File.join(s.output_path, dest)
+        dest = s.path.output.join(dest)
+        target = Pathname.new(target)
         dbg "Including #{target} at #{dest}"
-        unless File.exist?(target)
+        unless target.exist?
           raise EngineError, "Error including target '#{target}': target doesn't exist."
         end
-        if File.exist?(dest)
-          FileUtils.rm_r(dest)
-        end
-        FileUtils.mkdir_p(File.dirname(dest))
+        dest.rmtree if dest.exist?
+        dest.dirname.mkpath
         FileUtils.cp_r(target, dest)
       end
     end

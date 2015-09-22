@@ -82,5 +82,38 @@ class Page
   end
 end
 
+
+class Collection
+  def initialize(page, pages, pagesize)
+    @page      = page
+    @pages     = pages
+    @pagesize  = pagesize
+    @pagecount = (@pages.length / @pagesize.to_f).ceil
+    @range     = (1..@pagecount)
+  end
+
+  attr_reader :range
+  attr_reader :pagecount
+
+  def paginate(index)
+    index = index - 1
+    first = index * @pagesize
+    last  = first + (@pagesize - 1)
+    @pages[first..last]
+  end
+
+  def links(index)
+    links = []
+    @range.each do |i|
+      if i == index
+        links << "<span class=\"pagination pagination-current\">#{index}</span>"
+      else
+        links << @page.link_to(text: i, klass: 'pagination pagination-link', index: i)
+      end
+    end
+    links.join("\n")
+  end
+end
+
 end # module ARKWEB
 

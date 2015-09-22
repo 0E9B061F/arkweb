@@ -7,23 +7,13 @@ class Interface
 
   # Initialize a new Interface object
   def initialize(args=ARGV)
-    @root    = File.absolute_path(File.join(File.dirname(__FILE__), '..', '..'))
-    @project = 'ARKWEB'
-    @freeze  = self.root('freeze.yaml')
-
-    if File.exist?(@freeze)
-      f = YAML.load_file(@freeze)
-      @version  = f['version']
-    else
-      @version  = Ark::Git.version(@root, default: 'DEV VERSION')
-    end
-    @identity = Ark::Git.version_line(@root, default: @version, project: @project)
+    @app = Application.new
 
     @conf = Ark::CLI.report(args) do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
       s.args "sitepath:#{Dir.pwd}"
-      s.version @identity
+      s.version @app.identity
 
       s.opt :verbose, :v,
       desc: 'Run verbosely'
@@ -50,7 +40,7 @@ class Interface
       s.raise_on_trailing
     end
 
-    @sitepath = @conf.arg(:sitepath)
+    @sitepath = Pathname.new(@conf.arg(:sitepath))
 
     Ark::Log::Conf[:verbose] = @conf.opt(:verbose)
     Ark::Log::Conf[:quiet]   = @conf.opt(:quiet)
@@ -60,18 +50,10 @@ class Interface
 
   attr_reader :identity
 
-  def root(*args)
-    if args.empty?
-      return @root
-    else
-      return File.join(@root, *args)
-    end
-  end
-
   # Render an existing site directory, generating HTML files to the output
   # directory. This is called from Interface#run
   def render
-    site = Site.new(self, @sitepath, @conf)
+    site = Site.new(@sitepath, @conf)
     site.engine.write_site
     msg "Done! Wrote site to: #{site.out(:render)}"
   end
@@ -80,18 +62,18 @@ class Interface
   # structure there. This is called from Interface#run
   def init
     msg "Initializing site: #{@sitepath}"
-    FileUtils.mkdir_p(@sitepath)
-    target = self.root('skel', '*')
-    FileUtils.cp_r(Dir[target], @sitepath)
+    @sitepath.mkpath
+    target = @app.root.join('skel')
+    FileUtils.cp_r(target.children, @sitepath)
     msg "Done! Initialized site: #{@sitepath}"
   end
 
   # Either render an existing site or initialize a new site
   def run
-    if File.directory?(@sitepath)
+    if @sitepath.directory?
       msg "Rendering site at '#{@sitepath}'"
       self.render
-    elsif !File.exist?(@sitepath)
+    elsif !@sitepath.exist?
       msg "Initializing new site at '#{@sitepath}'"
       self.init
     else
