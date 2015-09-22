@@ -4,15 +4,15 @@
   <head>
     <meta charset="UTF-8" />
 
-    <% if @site.info(:xuacompat) %>
-      <meta content="<%= @site.info(:xuacompat) %>" http-equiv="X-UA-Compatible" />
+    <% if @site.conf(:xuacompat) %>
+      <meta content="<%= @site.conf(:xuacompat) %>" http-equiv="X-UA-Compatible" />
     <% end %>
 
-    <title><%= @site.info(:title) %></title>
+    <title><%= @site.conf(:title) %></title>
 
-    <%= @site.meta 'author',      @site.info(:author) %>
-    <%= @site.meta 'description', @site.info(:desc) %>
-    <%= @site.meta 'keywords',    @site.info(:keywords) %>
+    <%= @site.meta 'author',      @site.conf(:author) %>
+    <%= @site.meta 'description', @site.conf(:desc) %>
+    <%= @site.meta 'keywords',    @site.conf(:keywords) %>
     <%= @site.meta 'generator',   @site.app.identity %>
 
     <%= @site.link_favicons %>

@@ -135,13 +135,16 @@ class Site
       end
     end
     @sections = {}
-    @pages = []
+    @pages = {}
     subdirs.each do |path|
       s = Section.new(self, path)
-      address = path.relative_path_from(@root).to_s
-      address = RootSectionName if address == '.'
-      @sections[address] = s
-      @pages += s.pages
+      addr = path.relative_path_from(@root).to_s
+      addr = RootSectionName if addr == '.'
+      @sections[addr] = s
+      s.pages.each do |page|
+        addr = page.path.link.to_s.sub(/^\//, '')
+        @pages[addr] = page
+      end
     end
 
     [:render, :tmp, :images, :cache].each do |dir|
@@ -157,11 +160,7 @@ class Site
   attr_reader :name
   attr_reader :input
   attr_reader :output
-  attr_reader :conf
   attr_reader :styles
-  attr_reader :pages
-  attr_reader :sections
-  attr_reader :webfonts
   attr_reader :images
   attr_reader :before_hooks
   attr_reader :after_hooks
@@ -169,19 +168,75 @@ class Site
   attr_reader :site_template
   attr_reader :page_template
 
-  def info(key)
-    @conf[key.to_sym]
+
+  #
+  # Inspection
+  #
+
+  # Access configuration details
+  def conf(key)
+    key = key.to_sym
+    unless @conf.keys.member?(key)
+      raise ArgumentError, "No configuration named '#{key}'"
+    end
+    return @conf[key]
   end
 
-  # Convenience method for accessing +@input+
+  # Return all configuration pairs
+  def configs
+    return @conf
+  end
+
+  # Access input paths by name
   def in(key)
-    @input[key.to_sym]
+    key = key.to_sym
+    unless @input.keys.member?(key)
+      raise ArgumentError, "No input path named '#{key}'"
+    end
+    return @input[key]
   end
 
-  # Convenience method for accessing +@output+
+  # Access output paths by name
   def out(key)
-    @output[key.to_sym]
+    key = key.to_sym
+    unless @output.keys.member?(key)
+      raise ArgumentError, "No output path named '#{key}'"
+    end
+    return @output[key]
   end
+
+  # Access site sections by name
+  def section(key)
+    clean = key.to_s.gsub(/(^\/)|(\/$)/, '')
+    unless @sections.keys.member?(clean)
+      raise ArgumentError, "No section named '#{key}'"
+    end
+    return @sections[clean]
+  end
+
+  # Return an array of all sections in the site
+  def sections
+    return @sections.values
+  end
+
+  # Access pages by name
+  def page(key)
+    clean = key.to_s.gsub(/(^\/)|(\/$)/, '')
+    unless @pages.keys.member?(clean)
+      raise ArgumentError, "No page named '#{key}'"
+    end
+    return @pages[clean]
+  end
+
+  # Return an array of all pages on the site
+  def pages
+    return @pages.values
+  end
+
+
+  #
+  # Helpers
+  #
 
   def img(name, alt: nil, id: nil, klass: nil)
     alt   = %Q( alt="#{alt}")     if alt
@@ -195,10 +250,10 @@ class Site
   end
 
   def link_styles
-    @styles.map {|n,s| s.head_link }.join("\n")
+    return @styles.map {|n,s| s.head_link }.join("\n")
   end
 
-  def link_google_fonts()
+  def link_google_fonts
     if @conf[:google_fonts]
       fonts = @conf[:google_fonts].join('|')
       url = "https://fonts.googleapis.com/css?family=#{fonts}"
@@ -240,6 +295,11 @@ class Site
       return %Q(<meta name="#{name}" content="#{content}" />)
     end
   end
+
+
+  #
+  # Utility
+  #
 
   def inspect
     return "#<Site:#{@conf[:title]}>"

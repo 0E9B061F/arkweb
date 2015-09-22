@@ -22,11 +22,11 @@ class Engine
   def initialize(site)
     @site = site
 
-    if @site.info(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
 
-    if @site.info(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.conf(:minify) && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
     end
@@ -125,7 +125,7 @@ class Engine
     FileUtils.mkdir_p(page.path.output.dirname)
 
     if !page.collect.empty? && page.pagesize
-      pages = page.collect.map {|a| @site.sections[a].pages }.flatten.sort {|a,b| a <=> b }
+      pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
       collection = Collection.new(page, pages, page.pagesize)
       r = 1..collection.pagecount
       r.each do |index|
@@ -141,7 +141,7 @@ class Engine
   end
 
   def validate
-    if @site.info(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
       @site.pages.each do |page|
         result = @validator.validate_file(page.out)
         if result.errors.length > 0
@@ -155,7 +155,7 @@ class Engine
   end
 
   def clobber
-    if @site.info(:clobber)
+    if @site.conf(:clobber)
       [:render, :cache, :tmp].each do |p|
         if File.directory?(@site.out(p))
           dbg "Clobbering directory: #{@site.out(p)}"
@@ -166,7 +166,7 @@ class Engine
   end
 
   def clean
-    if @site.info(:clean)
+    if @site.conf(:clean)
       [:cache, :tmp].each do |p|
         if File.directory?(@site.out(p))
           dbg "Cleaning directory: #{@site.out(p)}"
@@ -178,7 +178,7 @@ class Engine
 
   def minify
     # XXX Don't forget to add javascript minification
-    if @site.info(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.conf(:minify) && ARKWEB.optional_gem('yui/compressor')
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"
@@ -194,7 +194,7 @@ class Engine
   end
 
   def copy_inclusions
-    @site.sections.each do |name, s|
+    @site.sections.each do |s|
       s.inclusions.each do |dest, target|
         dest = s.path.output.join(dest)
         target = Pathname.new(target)
@@ -247,7 +247,7 @@ class Engine
   end
 
   def deploy
-    addr = @site.info(:deploy)
+    addr = @site.conf(:deploy)
     if addr
       msg "Deploying to #{addr['host']}"
       if addr['ssh']
