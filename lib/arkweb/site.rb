@@ -156,13 +156,6 @@ class Site
     @output[key.to_sym]
   end
 
-  def link_from_output(path)
-    branch = Pathname.new(path)
-    stem = Pathname.new(@output[:render])
-    rel = branch.relative_path_from(stem)
-    return File.join('/', rel)
-  end
-
   def img(name, alt: nil, id: nil, klass: nil)
     alt   = %Q( alt="#{alt}")     if alt
     id    = %Q( id="#{id}")       if id
