@@ -265,11 +265,11 @@ class Engine
       FileUtils.mkdir_p(@site.out(:favicons))
       @site.favicon.formats.each do |format|
         dbg "Generating favicon: #{format.name}", 1
-        img = MiniMagick::Image.open(@site.favicon.input_path)
+        img = MiniMagick::Image.open(format.path.input)
         img.resize(format.resolution)
         img.format(format.format)
-        img.write(format.output_path)
-        File.chmod(0644, format.output_path)
+        img.write(format.path.output)
+        File.chmod(0644, format.path.output) # minimagick writes files as 0400 for some reason
       end
     end
   end

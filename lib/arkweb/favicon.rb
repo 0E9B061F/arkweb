@@ -1,21 +1,18 @@
 module ARKWEB
 
 class FaviconFormat
-  def initialize(site, format, resolution, output_dir, name=nil)
+  def initialize(site, input_path, output_dir, format, resolution, name=nil)
     @site = site
     @format = format
     @resolution = resolution
-    @output_dir = output_dir
-    if name
-      @name = name
-    else
-      @name = "favicon-#{@resolution}.#{@format}"
-    end
-    @output_path = File.join(@output_dir, @name)
-    @link_path = @site.link_from_output(@output_path)
+    @name = name || "favicon-#{resolution}"
+    @path = Path.new(@site, input_path, output_dir,
+      output_name: @name,
+      output_ext: @format,
+      relative: ''
+    )
   end
-  attr_reader :output_path
-  attr_reader :link_path
+  attr_reader :path
   attr_reader :format
   attr_reader :resolution
   attr_reader :name
@@ -26,14 +23,20 @@ class Favicon
     @site = site
     @input_path = input_path
     @formats = []
-    @formats << FaviconFormat.new(@site, 'ico', '16x16',   @site.out(:render), 'favicon.ico')
-    @formats << FaviconFormat.new(@site, 'png', '16x16',   @site.out(:favicons))
-    @formats << FaviconFormat.new(@site, 'png', '32x32',   @site.out(:favicons))
-    @formats << FaviconFormat.new(@site, 'png', '96x96',   @site.out(:favicons))
-    @formats << FaviconFormat.new(@site, 'png', '192x192', @site.out(:favicons))
+    format('ico', '16x16', @site.out(:render), 'favicon')
+    format('png', '16x16')
+    format('png', '32x32')
+    format('png', '96x96')
+    format('png', '192x192')
   end
-  attr_reader :input_path
   attr_reader :formats
+
+  private
+
+  def format(ext, resolution, output_dir=nil, name=nil)
+    output_dir = output_dir || @site.out(:favicons)
+    @formats << FaviconFormat.new(@site, @input_path, output_dir, ext, resolution, name)
+  end
 end
 
 end # module ARKWEB

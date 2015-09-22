@@ -191,7 +191,7 @@ class Site
       links = []
       @favicon.formats.each do |format|
         unless format.format == 'ico'
-          links << %Q(<link rel="icon" type="image/#{format.format}" sizes="#{format.resolution}" href="#{format.link_path}">)
+          links << %Q(<link rel="icon" type="image/#{format.format}" sizes="#{format.resolution}" href="#{format.path.link}">)
         end
       end
       return links.join("\n")
