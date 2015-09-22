@@ -12,7 +12,10 @@ class Path
     @name = @input.basename.to_s[/^[^\.]+/]
     @output_name = output_name || @name
     @output_ext = output_ext || @input.extname
-    @output = @output_dir + @relative + "#{@output_name}.#{@output_ext}"
+    if !@output_ext.empty? && !@output_ext[/^\./]
+      @output_ext = ".#{@output_ext}"
+    end
+    @output = @output_dir + @relative + "#{@output_name}#{@output_ext}"
     @render_root = Pathname.new(@site.out(:render))
     relative_out = @output.relative_path_from(@render_root)
     @link = "/#{relative_out}"
