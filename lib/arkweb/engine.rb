@@ -124,19 +124,23 @@ class Engine
     # Make sure the appropriate subdirectories exist in the output folder
     FileUtils.mkdir_p(page.path.output.dirname)
 
-    if !page.collect.empty? && page.pagesize
-      pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
-      collection = Collection.new(page, pages, page.pagesize)
-      r = 1..collection.pagecount
-      r.each do |index|
-        data = self.render_page(page, index, collection)
-        page.path.paginated_output(index).write(data)
-        dbg "#{page.path.basename}: wrote index #{index}", 1
+    if page.path.changed?
+      if !page.collect.empty? && page.pagesize
+        pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
+        collection = Collection.new(page, pages, page.pagesize)
+        r = 1..collection.pagecount
+        r.each do |index|
+          data = self.render_page(page, index, collection)
+          page.path.paginated_output(index).write(data)
+          dbg "#{page.path.basename}: wrote index #{index}", 1
+        end
+      else
+        data = self.render_page(page)
+        page.path.output.write(data)
+        dbg "#{page.path.basename}: wrote page", 1
       end
     else
-      data = self.render_page(page)
-      page.path.output.write(data)
-      dbg "#{page.path.basename}: wrote page", 1
+      dbg "#{page.path.basename}: unchanged, skipping.", 1
     end
   end
 
@@ -236,12 +240,16 @@ class Engine
       msg 'Generating favicons'
       FileUtils.mkdir_p(@site.out(:favicons))
       @site.favicon.formats.each do |format|
-        dbg "Generating favicon: #{format.name}", 1
-        img = MiniMagick::Image.open(format.path.input)
-        img.resize(format.resolution)
-        img.format(format.format)
-        img.write(format.path.output)
-        format.path.output.chmod(0644)
+        if format.path.changed?
+          dbg "#{format.path.output.basename}: generating.", 1
+          img = MiniMagick::Image.open(format.path.input)
+          img.resize(format.resolution)
+          img.format(format.format)
+          img.write(format.path.output)
+          format.path.output.chmod(0644)
+        else
+          dbg "#{format.path.output.basename}: unchanged, skipping.", 1
+        end
       end
     end
   end
