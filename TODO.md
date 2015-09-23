@@ -5,7 +5,9 @@ image pages are rendered using a special image.html.erb template
 alternatively, a gallery mode, where a directory named like `pictures.gallery/`
 is treated as a single page. the page will be built from one or more images in
 the gallery, plus an optional description.{md,html}[.erb] for text content
-describing the gallery.
+describing the gallery. alternatively, use `pagename.image` for single images.
+this would use a special `gallery.html.erb` or `image.html.erb` template
+supplied in the AW dir.
 
 likewise, a directory format like `title.page/` could be used to create pages
 from multiple files, though i think the use cases i had in mind for this have
@@ -15,7 +17,10 @@ make optional dependencies more verbose, especially when their feature are
 directly called. add warnings in.
 
 an automatic index should be created for sections if one doesnt exist, which
-would list subsections and pages
+would list subsections and pages. for this purpose, a special `index.html.erb`
+template would be used, rendered within the page template. this could be a
+generic template supplied in the program dir, replacable by the user in the AW
+dir.
 
 each section should have its own section.yaml, similar to the site's header.yaml
 this could be used to set things like the section title. this is equivalent to
