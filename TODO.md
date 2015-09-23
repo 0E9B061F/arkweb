@@ -42,3 +42,8 @@ also be included without getting wrapped in a template.
 
 apple icon support, windows tile support
 
+decouple deployment configuration from deployment option -- currently,
+deployment happens for every render if deployment is configured. instead there
+should be a deployment flag which triggers deployment to the configured location
+if there is one.
+
