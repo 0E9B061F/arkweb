@@ -212,8 +212,8 @@ class Engine
     end
   end
 
-  def run_before_hooks
-    @site.before_hooks.each do |hook|
+  def run_hooks(hooks)
+    hooks.each do |hook|
       basename = File.basename(hook)
       dbg "Running hook: #{basename}"
       output = `#{hook}`
@@ -223,15 +223,12 @@ class Engine
     end
   end
 
+  def run_before_hooks
+    self.run_hooks(@site.before_hooks)
+  end
+
   def run_after_hooks
-    @site.after_hooks.each do |hook|
-      basename = File.basename(hook)
-      dbg "Running hook: #{basename}"
-      output = `#{hook}`
-      output.split("\n").map {|line| "#{basename}: #{line}" }.each do |line|
-        dbg line, 1
-      end
-    end
+    self.run_hooks(@site.after_hooks)
   end
 
   def generate_favicons
