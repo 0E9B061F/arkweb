@@ -73,7 +73,7 @@ class Page
   end
 
   def inspect
-    return "#<Page:#{self}>"
+    return "#<AW::Page:#{self}>"
   end
 
   def <=>(b)
@@ -114,7 +114,7 @@ class Collection
   end
 
   def inspect
-    return "#<Collection:#{@page.collect.join(",")}>"
+    return "#<AW::Collection:#{@page.collect.join(",")}>"
   end
 end
 

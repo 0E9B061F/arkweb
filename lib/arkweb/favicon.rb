@@ -15,6 +15,10 @@ class FaviconFormat
   attr_reader :format
   attr_reader :resolution
   attr_reader :name
+
+  def inspect
+    return "#<AW::FaviconFormat:#{@path.link}>"
+  end
 end
 
 class Favicon
@@ -40,7 +44,7 @@ class Favicon
   public
 
   def inspect
-    return "#<Favicon:#{@input_path.basename}>"
+    return "#<AW::Favicon:#{@input_path.basename}>"
   end
 end
 

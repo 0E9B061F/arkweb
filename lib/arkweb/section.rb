@@ -51,7 +51,7 @@ class Section
   end
 
   def inspect
-    return "#<Section:#{@path.link}>"
+    return "#<AW::Section:#{@path.link}>"
   end
 end
 

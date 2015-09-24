@@ -81,7 +81,7 @@ class Path
   #
 
   def inspect
-    return "#<Path:#{@link}>"
+    return "#<AW::Path:#{@link}>"
   end
 end
 

@@ -324,7 +324,7 @@ class Site
   #
 
   def inspect
-    return "#<Site:#{@conf[:title]}>"
+    return "#<AW::Site:#{@conf[:title]}>"
   end
 end # class Site
 

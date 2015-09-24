@@ -27,7 +27,7 @@ class Application
   end
 
   def inspect
-    return "#<Application:#{@identity}>"
+    return "#<AW::Application:#{@identity}>"
   end
 end
 

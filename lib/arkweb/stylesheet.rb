@@ -47,7 +47,7 @@ class Stylesheet
   end
 
   def inspect
-    return "#<Stylesheet:#{@path.link}>"
+    return "#<AW::Stylesheet:#{@path.link}>"
   end
 end
 

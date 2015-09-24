@@ -30,7 +30,7 @@ class Image
   end
 
   def inspect
-    return "#<Image:#{@path.link}>"
+    return "#<AW::Image:#{@path.link}>"
   end
 end
 
