@@ -26,14 +26,11 @@ each section should have its own section.yaml, similar to the site's header.yaml
 this could be used to set things like the section title. this is equivalent to
 frontmatter for individual pages.
 
-smart rendering: only re-render files which have changed since the last rendering.
-
 yaml frontmatter on stylseets with heritable attribute
 
-smarter handling of output files and directories; previously rendered files
-should be deleted if the files they were rendered from were deleted. clobbering
-the output directory should fall back on erasing all files underneath the output
-dir if the output dir cannot be deleted (ie, the user has no rights to)
+clobbering the output directory should fall back on erasing all files underneath
+the output dir if the output dir cannot be deleted (ie, the user has no rights
+to)
 
 include feature should support full rendering for whatever files will be
 included, but only if the user requests it - this way normal ARKWEB-style pages
