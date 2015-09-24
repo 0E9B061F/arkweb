@@ -58,20 +58,20 @@ class Engine
 
   def render_page(page, index=nil, collection=nil)
     if index
-      dbg "#{page.path.basename}: rendering index #{index}", 1
+      dbg "Rendering index #{index}", 1
     end
     if page.has_erb?
-      dbg "#{page.path.basename}: evaluating ERB", 1
+      dbg "Evaluating ERB", 1
       markup = self.evaluate_erb(page.contents, :site => @site, :section => page.section, :page => page, :index => index, :collection => collection)
     else
       markup = page.contents
     end
     body = case page.type
     when 'md'
-      dbg "#{page.path.basename}: evaluating Markdown", 1
+      dbg "Evaluating Markdown", 1
       self.evaluate_md(markup)
     when 'wiki'
-      dbg "#{page.path.basename}: evaluating MediaWiki markup", 1
+      dbg "Evaluating MediaWiki markup", 1
       self.evaluate_wiki(markup)
     when 'html'
       markup
@@ -87,7 +87,7 @@ class Engine
         :page => page
       )
     end
-    self.evaluate_erb(@site_erb,
+    return self.evaluate_erb(@site_erb,
       :site => @site,
       :body => body,
       :section => page.section,
@@ -105,49 +105,73 @@ class Engine
 
   def render_styles
     @site.styles.each do |name, style|
-      FileUtils.mkdir_p(style.path.output.dirname)
+      FileUtils.mkdir_p(style.path.tmp.dirname)
       if style.is_css?
-        FileUtils.cp(style.path.input, style.path.output)
+        FileUtils.cp(style.path.input, style.path.tmp)
       else
         # Only render if output doesn't already exist, or if output is outdated
         if style.path.changed?
           dbg "Rendering SASS file '#{style}' to '#{style.path.output}'"
-          `sass -t compressed #{style.path.input} #{style.path.output}`
+          `sass -t compressed #{style.path.input} #{style.path.tmp}`
+        else
+          FileUtils.cp(style.path.output, style.path.tmp)
         end
       end
     end
   end
 
-  def write_page(page)
-    msg "Processing page: #{page.path.basename}"
+  def write_pages
+    changed_sections = []
+    @site.pages.each do |page|
+      if page.path.changed?
+        puts "changed: #{page}"
+        changed_sections << page.section.path.address
+      end
+    end
+    p changed_sections
 
-    # Make sure the appropriate subdirectories exist in the output folder
-    FileUtils.mkdir_p(page.path.output.dirname)
+    @site.pages.each do |page|
+      msg "Processing page: #{page.path.basename}"
 
-    if page.path.changed?
+      # Make sure the appropriate subdirectories exist in the output folder
+      FileUtils.mkdir_p(page.path.tmp.dirname)
+
       if !page.collect.empty? && page.pagesize
-        pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
-        collection = Collection.new(page, pages, page.pagesize)
-        r = 1..collection.pagecount
-        r.each do |index|
-          data = self.render_page(page, index, collection)
-          page.path.paginated_output(index).write(data)
-          dbg "#{page.path.basename}: wrote index #{index}", 1
+        if page.path.changed? || page.collect.any? {|sec| changed_sections.member?(sec) }
+          pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
+          collection = Collection.new(page, pages, page.pagesize)
+          collection.range.each do |index|
+            data = self.render_page(page, index, collection)
+            page.path.paginated_tmp(index).write(data)
+            dbg "Wrote index #{index}", 1
+          end
+        else
+          dbg "Unchanged", 1
+          # XXX this is pretty ugly
+          ext = page.path.output.extname.to_s.sub(/^\./, '')
+          page.path.output.dirname.children.each do |path|
+            if path.basename.to_s[/^#{page.path.name}-*\d*\.#{ext}/]
+              FileUtils.cp(path, page.path.tmp.dirname)
+            end
+          end
         end
       else
-        data = self.render_page(page)
-        page.path.output.write(data)
-        dbg "#{page.path.basename}: wrote page", 1
+        if page.path.changed?
+          data = self.render_page(page)
+          page.path.tmp.write(data)
+          dbg "Wrote page", 1
+        else
+          dbg "Unchanged", 1
+          FileUtils.cp(page.path.output, page.path.tmp)
+        end
       end
-    else
-      dbg "#{page.path.basename}: unchanged, skipping.", 1
     end
   end
 
   def validate
     if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
       @site.pages.each do |page|
-        result = @validator.validate_file(page.out)
+        result = @validator.validate_file(page.path.tmp)
         if result.errors.length > 0
           msg "#{page}: invalid!"
           result.errors.each {|e| dbg Ark::Text.wrap(e.to_s, indent: 15, indent_after: true), 1 }
@@ -160,23 +184,15 @@ class Engine
 
   def clobber
     if @site.conf(:clobber)
-      [:render, :cache, :tmp].each do |p|
-        if File.directory?(@site.out(p))
-          dbg "Clobbering directory: #{@site.out(p)}"
-          FileUtils.rm_r(@site.out(p))
-        end
-      end
+      dbg "Clobbering old output from: #{@site.out(:root)}"
+      @site.out(:root).rmtree if @site.out(:root).exist?
     end
   end
 
-  def clean
-    if @site.conf(:clean)
-      [:cache, :tmp].each do |p|
-        if File.directory?(@site.out(p))
-          dbg "Cleaning directory: #{@site.out(p)}"
-          FileUtils.rm_r(@site.out(p))
-        end
-      end
+  def clean(force: false)
+    if @site.conf(:clean) || force
+      dbg "Removing temporary files: #{@site.tmp(:root)}"
+      @site.tmp(:root).rmtree if @site.tmp(:root).exist?
     end
   end
 
@@ -186,9 +202,9 @@ class Engine
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"
-          data = style.path.output.read
+          data = style.path.tmp.read
           pressed = @css_press.compress(data)
-          style.path.output.write(pressed)
+          style.path.tmp.write(pressed)
         rescue => e
           wrn "Failed to minify file: #{style}"
           wrn e, 1
@@ -200,15 +216,14 @@ class Engine
   def copy_inclusions
     @site.sections.each do |s|
       s.inclusions.each do |dest, target|
-        dest = s.path.output.join(dest)
+        tmp = s.path.tmp.join(dest)
         target = Pathname.new(target)
-        dbg "Including #{target} at #{dest}"
         unless target.exist?
           raise EngineError, "Error including target '#{target}': target doesn't exist."
         end
-        dest.rmtree if dest.exist?
-        dest.dirname.mkpath
-        FileUtils.cp_r(target, dest)
+        dbg "Including #{target} at #{dest}"
+        tmp.dirname.mkpath
+        FileUtils.cp_r(target, tmp)
       end
     end
   end
@@ -238,17 +253,18 @@ class Engine
   def generate_favicons
     if !@site.favicon.nil? && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
-      FileUtils.mkdir_p(@site.out(:favicons))
+      FileUtils.mkdir_p(@site.tmp(:favicons))
       @site.favicon.formats.each do |format|
         if format.path.changed?
           dbg "#{format.path.output.basename}: generating.", 1
           img = MiniMagick::Image.open(format.path.input)
           img.resize(format.resolution)
           img.format(format.format)
-          img.write(format.path.output)
-          format.path.output.chmod(0644)
+          img.write(format.path.tmp)
+          format.path.tmp.chmod(0644)
         else
-          dbg "#{format.path.output.basename}: unchanged, skipping.", 1
+          dbg "#{format.path.output.basename}: unchanged", 1
+          FileUtils.cp(format.path.output, format.path.tmp)
         end
       end
     end
@@ -264,34 +280,37 @@ class Engine
         else
           port = ''
         end
-        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:render)}/ #{addr['host']}`
+        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:root)}/ #{addr['host']}`
       else
-        `rsync -az --delete-before #{@site.out(:render)}/ #{addr['host']}`
+        `rsync -az --delete-before #{@site.out(:root)}/ #{addr['host']}`
       end
     end
   end
 
+  # Remove old output and replace with newly-assembled site
+  def overwrite_output
+    @site.out(:root).rmtree if @site.out(:root).exist?
+    FileUtils.cp_r(@site.tmp(:root), @site.out(:root))
+  end
+
   def write_site
-    self.run_before_hooks
     self.clobber
-
-    @site.pages.each do |page|
-      self.write_page(page)
-    end
-
+    self.clean(force: true)
+    self.run_before_hooks
+    self.write_pages
     self.generate_favicons
     self.render_styles
     self.copy_images
     self.copy_inclusions
     self.minify
     self.validate
+    self.overwrite_output
     self.run_after_hooks
     self.deploy
     self.clean
   end
 
 end # class Engine
-
 
 end # module ARKWEB
 

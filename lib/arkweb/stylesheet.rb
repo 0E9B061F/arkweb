@@ -10,9 +10,9 @@ class Stylesheet
     @section = section
 
     if self.site_style?
-      @path = Path.new(@site, input_path, @site.out(:aw), relative: '', output_ext: 'css')
+      @path = Path.new(@site, input_path, :aw, output_ext: 'css')
     else
-      @path = Path.new(@site, input_path, @site.out(:render), output_ext: 'css')
+      @path = Path.new(@site, input_path, :root, output_ext: 'css', relative: true)
     end
 
     @name = @path.name

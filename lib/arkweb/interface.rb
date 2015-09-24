@@ -7,6 +7,7 @@ class Interface
 
   # Initialize a new Interface object
   def initialize(args=ARGV)
+    msg "Initializing ARKWEB"
     @app = Application.new
 
     @conf = Ark::CLI.report(args) do |s|
@@ -54,8 +55,9 @@ class Interface
   # directory. This is called from Interface#run
   def render
     site = Site.new(@sitepath, @conf)
+    msg "Assembling site: #{site.conf(:title)}"
     site.engine.write_site
-    msg "Done! Wrote site to: #{site.out(:render)}"
+    msg "Done! Wrote site to: #{site.out(:root)}"
   end
 
   # Initialize a new site at the given path by copying the skeletal site
@@ -71,10 +73,8 @@ class Interface
   # Either render an existing site or initialize a new site
   def run
     if @sitepath.directory?
-      msg "Rendering site at '#{@sitepath}'"
       self.render
     elsif !@sitepath.exist?
-      msg "Initializing new site at '#{@sitepath}'"
       self.init
     else
       wrn "#{@sitepath} is a file. Please provide a path to an existing site
@@ -84,4 +84,6 @@ class Interface
 
 end # class Interface
 end # module ARKWEB
+
+
 

@@ -6,7 +6,7 @@ class Section
 
   def initialize(site, input_path)
     @site = site
-    @path = Path.new(@site, input_path, @site.out(:render))
+    @path = Path.new(@site, input_path, :root, relative: true)
 
     # Get all pages in this section
     @pages = @path.input.glob(Site::Types[:pages]).map do |p|

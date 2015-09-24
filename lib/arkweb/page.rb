@@ -4,7 +4,7 @@ class Page
   def initialize(site, input_path, section)
     @site    = site
     @section = section
-    @path    = Path.new(@site, input_path, @site.out(:render), output_ext: 'html')
+    @path    = Path.new(@site, input_path, :root, output_ext: 'html', relative: true)
 
     @index = 0
 

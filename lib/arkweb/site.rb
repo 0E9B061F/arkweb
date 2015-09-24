@@ -70,15 +70,19 @@ class Site
     @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf.select! {|k,v| defaults.keys.member?(k) }
 
-    # Paths to where output files should be rendered
+    # Paths to where output files will be located
     @output = {}
-    @output[:tmp]      = @conf[:tmp]    || @input[:arkweb].join('tmp')
-    @output[:cache]    = @conf[:cache]  || @input[:arkweb].join('cache')
-    @output[:render]   = @conf[:output] || @input[:arkweb].join('output')
-    @output[:aw]       = @output[:render].join(OutputARKWEB)
+    @output[:root]     = @conf[:output] || @input[:arkweb].join('output')
+    @output[:aw]       = @output[:root].join(OutputARKWEB)
     @output[:images]   = @output[:aw].join('images')
-    @output[:fonts]    = @output[:aw].join('fonts')
     @output[:favicons] = @output[:aw].join('favicons')
+
+    # Paths to where tmp files will be located
+    @tmp = {}
+    @tmp[:root]     = @conf[:tmp] || @input[:arkweb].join('tmp')
+    @tmp[:aw]       = @tmp[:root].join(OutputARKWEB)
+    @tmp[:images]   = @tmp[:aw].join('images')
+    @tmp[:favicons] = @tmp[:aw].join('favicons')
 
     # Decide what templates we'll be using
     if @input[:site_erb].exist?
@@ -147,7 +151,7 @@ class Site
       end
     end
 
-    [:render, :tmp, :images, :cache].each do |dir|
+    [:root, :images].each do |dir|
       FileUtils.mkdir_p(@output[dir])
     end
 
@@ -205,6 +209,15 @@ class Site
     return @output[key]
   end
 
+  # Access tmp paths by name
+  def tmp(key)
+    key = key.to_sym
+    unless @tmp.keys.member?(key)
+      raise ArgumentError, "No tmp path named '#{key}'"
+    end
+    return @tmp[key]
+  end
+
   # Access site sections by name
   def section(key)
     clean = key.to_s.gsub(/(^\/)|(\/$)/, '')
@@ -243,7 +256,7 @@ class Site
     id    = %Q( id="#{id}")       if id
     klass = %Q( class="#{klass}") if klass
 
-    link = @output[:images].relative_path_from(@output[:render]) + name
+    link = @output[:images].relative_path_from(@output[:root]) + name
     link = "/#{link}"
 
     return %Q(<img#{id}#{klass}#{alt} src="#{link}" />)

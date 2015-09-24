@@ -8,8 +8,7 @@ class FaviconFormat
     @name = name || "favicon-#{resolution}"
     @path = Path.new(@site, input_path, output_dir,
       output_name: @name,
-      output_ext: @format,
-      relative: ''
+      output_ext: @format
     )
   end
   attr_reader :path
@@ -23,7 +22,7 @@ class Favicon
     @site = site
     @input_path = input_path
     @formats = []
-    format('ico', '16x16', @site.out(:render), 'favicon')
+    format('ico', '16x16', :root, 'favicon')
     format('png', '16x16')
     format('png', '32x32')
     format('png', '96x96')
@@ -34,7 +33,7 @@ class Favicon
   private
 
   def format(ext, resolution, output_dir=nil, name=nil)
-    output_dir = output_dir || @site.out(:favicons)
+    output_dir = output_dir || :favicons
     @formats << FaviconFormat.new(@site, @input_path, output_dir, ext, resolution, name)
   end
 
@@ -46,4 +45,6 @@ class Favicon
 end
 
 end # module ARKWEB
+
+
 

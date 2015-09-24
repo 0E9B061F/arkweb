@@ -6,3 +6,8 @@ author: nn
 google_fonts: [Megrim, Pompiere]
 xuacompat: IE=9
 
+deploy:
+  host: "lamplit.net:/home/nn/sites/test"
+  port: "22222"
+  ssh: true
+
