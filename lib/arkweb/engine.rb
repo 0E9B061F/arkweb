@@ -37,6 +37,9 @@ class Engine
       @page_erb = false
     end
     @site_erb = @site.site_template.read
+
+    @cropped = {}
+    @changed_sections = []
   end
   attr_reader :pages
 
@@ -105,64 +108,45 @@ class Engine
 
   def render_styles
     @site.styles.each do |name, style|
-      FileUtils.mkdir_p(style.path.tmp.dirname)
+      FileUtils.mkdir_p(style.path.output.dirname)
       if style.is_css?
-        FileUtils.cp(style.path.input, style.path.tmp)
+        FileUtils.cp(style.path.input, style.path.output)
       else
         # Only render if output doesn't already exist, or if output is outdated
         if style.path.changed?
           dbg "Rendering SASS file '#{style}' to '#{style.path.output}'"
-          `sass -t compressed #{style.path.input} #{style.path.tmp}`
-        else
-          FileUtils.cp(style.path.output, style.path.tmp)
+          `sass -t compressed #{style.path.input} #{style.path.output}`
         end
       end
     end
   end
 
   def write_pages
-    changed_sections = []
-    @site.pages.each do |page|
-      if page.path.changed?
-        puts "changed: #{page}"
-        changed_sections << page.section.path.address
-      end
-    end
-    p changed_sections
-
     @site.pages.each do |page|
       msg "Processing page: #{page.path.basename}"
 
       # Make sure the appropriate subdirectories exist in the output folder
-      FileUtils.mkdir_p(page.path.tmp.dirname)
+      FileUtils.mkdir_p(page.path.output.dirname)
 
       if !page.collect.empty? && page.pagesize
-        if page.path.changed? || page.collect.any? {|sec| changed_sections.member?(sec) }
+        if page.path.changed? || page.collect.any? {|s| @changed_sections.member?(s) }
           pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
           collection = Collection.new(page, pages, page.pagesize)
           collection.range.each do |index|
             data = self.render_page(page, index, collection)
-            page.path.paginated_tmp(index).write(data)
+            page.path.paginated_output(index).write(data)
             dbg "Wrote index #{index}", 1
           end
         else
           dbg "Unchanged", 1
-          # XXX this is pretty ugly
-          ext = page.path.output.extname.to_s.sub(/^\./, '')
-          page.path.output.dirname.children.each do |path|
-            if path.basename.to_s[/^#{page.path.name}-*\d*\.#{ext}/]
-              FileUtils.cp(path, page.path.tmp.dirname)
-            end
-          end
         end
       else
         if page.path.changed?
           data = self.render_page(page)
-          page.path.tmp.write(data)
+          page.path.output.write(data)
           dbg "Wrote page", 1
         else
           dbg "Unchanged", 1
-          FileUtils.cp(page.path.output, page.path.tmp)
         end
       end
     end
@@ -171,7 +155,7 @@ class Engine
   def validate
     if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
       @site.pages.each do |page|
-        result = @validator.validate_file(page.path.tmp)
+        result = @validator.validate_file(page.path.output)
         if result.errors.length > 0
           msg "#{page}: invalid!"
           result.errors.each {|e| dbg Ark::Text.wrap(e.to_s, indent: 15, indent_after: true), 1 }
@@ -191,8 +175,8 @@ class Engine
 
   def clean(force: false)
     if @site.conf(:clean) || force
-      dbg "Removing temporary files: #{@site.tmp(:root)}"
-      @site.tmp(:root).rmtree if @site.tmp(:root).exist?
+      dbg "Removing temporary files: #{@site.out(:tmp)}"
+      @site.out(:tmp).rmtree if @site.out(:tmp).exist?
     end
   end
 
@@ -202,9 +186,9 @@ class Engine
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"
-          data = style.path.tmp.read
+          data = style.path.output.read
           pressed = @css_press.compress(data)
-          style.path.tmp.write(pressed)
+          style.path.output.write(pressed)
         rescue => e
           wrn "Failed to minify file: #{style}"
           wrn e, 1
@@ -216,7 +200,7 @@ class Engine
   def copy_inclusions
     @site.sections.each do |s|
       s.inclusions.each do |dest, target|
-        tmp = s.path.tmp.join(dest)
+        tmp = s.path.output.join(dest)
         target = Pathname.new(target)
         unless target.exist?
           raise EngineError, "Error including target '#{target}': target doesn't exist."
@@ -253,18 +237,17 @@ class Engine
   def generate_favicons
     if !@site.favicon.nil? && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
-      FileUtils.mkdir_p(@site.tmp(:favicons))
+      FileUtils.mkdir_p(@site.out(:favicons))
       @site.favicon.formats.each do |format|
         if format.path.changed?
           dbg "#{format.path.output.basename}: generating.", 1
           img = MiniMagick::Image.open(format.path.input)
           img.resize(format.resolution)
           img.format(format.format)
-          img.write(format.path.tmp)
-          format.path.tmp.chmod(0644)
+          img.write(format.path.output)
+          format.path.output.chmod(0644)
         else
           dbg "#{format.path.output.basename}: unchanged", 1
-          FileUtils.cp(format.path.output, format.path.tmp)
         end
       end
     end
@@ -287,15 +270,50 @@ class Engine
     end
   end
 
-  # Remove old output and replace with newly-assembled site
-  def overwrite_output
-    @site.out(:root).rmtree if @site.out(:root).exist?
-    FileUtils.cp_r(@site.tmp(:root), @site.out(:root))
+  def write_path_cache
+    cache = YAML.dump(@site.path_cache)
+    @site.path_cache_file.write(cache)
+  end
+
+  def analyze_output
+    return unless @site.smart_rendering
+    @site.pages.each do |page|
+      if page.path.changed?
+        @changed_sections << page.section.path.address
+      end
+    end
+    @site.path_cache.each do |type,paths|
+      leftovers = @site.old_path_cache[type] - paths
+      @cropped[type] = leftovers
+      @cropped[type].each do |path|
+        if type == :pages
+          sec_address = File.dirname(path)
+          sec_address = Site::RootSectionName if sec_address == '.'
+          @changed_sections << @site.section(sec_address).path.address
+        end
+      end
+    end
+  end
+
+  def crop_output
+    return unless @site.smart_rendering
+    @cropped.each do |type,paths|
+      paths.each do |path|
+        path = @site.out(:root).join(path)
+        if path.file?
+          path.delete
+        else
+          path.rmtree
+        end
+      end
+    end
   end
 
   def write_site
     self.clobber
     self.clean(force: true)
+    self.analyze_output
+    self.crop_output
     self.run_before_hooks
     self.write_pages
     self.generate_favicons
@@ -304,7 +322,7 @@ class Engine
     self.copy_inclusions
     self.minify
     self.validate
-    self.overwrite_output
+    self.write_path_cache
     self.run_after_hooks
     self.deploy
     self.clean

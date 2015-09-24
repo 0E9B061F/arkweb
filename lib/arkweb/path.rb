@@ -11,7 +11,6 @@ class Path
     @name = @basename[/^[^\.]+/]
 
     @output_dir = @site.out(output_root)
-    @tmp_dir = @site.tmp(output_root)
 
     if relative
       @relative = @input.relative_path_from(site_root).dirname
@@ -29,7 +28,6 @@ class Path
     @fullname = "#{@output_name}#{@output_ext}"
 
     @output = @output_dir + @relative + @fullname
-    @tmp = @tmp_dir + @relative + @fullname
 
     @render_root = Pathname.new(@site.out(:root))
     @address = @output.relative_path_from(@render_root).to_s
@@ -37,7 +35,6 @@ class Path
   end
   attr_reader :input
   attr_reader :output
-  attr_reader :tmp
   attr_reader :link
   attr_reader :name
   attr_reader :basename
@@ -55,11 +52,6 @@ class Path
       index = "-#{index}"
     end
     return "#{@name}#{index}"
-  end
-
-  def paginated_tmp(index)
-    name = self.paginated_name(index)
-    return @tmp_dir + @relative + "#{name}#{@output_ext}"
   end
 
   def paginated_output(index)

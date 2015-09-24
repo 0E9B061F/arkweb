@@ -72,17 +72,11 @@ class Site
 
     # Paths to where output files will be located
     @output = {}
+    @output[:tmp]      = @conf[:tmp] || @input[:arkweb].join('tmp')
     @output[:root]     = @conf[:output] || @input[:arkweb].join('output')
     @output[:aw]       = @output[:root].join(OutputARKWEB)
     @output[:images]   = @output[:aw].join('images')
     @output[:favicons] = @output[:aw].join('favicons')
-
-    # Paths to where tmp files will be located
-    @tmp = {}
-    @tmp[:root]     = @conf[:tmp] || @input[:arkweb].join('tmp')
-    @tmp[:aw]       = @tmp[:root].join(OutputARKWEB)
-    @tmp[:images]   = @tmp[:aw].join('images')
-    @tmp[:favicons] = @tmp[:aw].join('favicons')
 
     # Decide what templates we'll be using
     if @input[:site_erb].exist?
@@ -106,10 +100,30 @@ class Site
       @after_hooks = @input[:after_hooks].children.select {|c| c.executable? }
     end
 
+    # This variable will store all output paths to be rendered. This will
+    # be written into the output as `.pathcache.yaml`, and used for smart
+    # rendering to determine what's been changed since the last render.
+    @path_cache_file = @output[:aw].join('.path-cache.yaml')
+    @path_cache = {
+      :pages => [],
+      :images => [],
+      :favicons => [],
+      :stylesheets => [],
+      :sections => []
+    }
+    if @path_cache_file.exist?
+      @smart_rendering = true
+      @old_path_cache = YAML.load_file(@path_cache_file)
+    else
+      @smart_rendering = false
+      @old_path_cache = false
+    end
+
     # Look for a favicon
     favicon_path = @input[:arkweb].glob(Types[:icon]).first
     if favicon_path
       @favicon = Favicon.new(self, favicon_path)
+      @path_cache[:favicons] += @favicon.formats.map {|f| f.path.address }
     else
       @favicon = nil
     end
@@ -123,6 +137,7 @@ class Site
     sheets.each do |s|
       s = Stylesheet.new(self, s)
       @styles[s.name] = s
+      @path_cache[:stylesheets] << s.path.address
     end
 
     # Return a list of sections, which are any subdirectories excluding special subdirectories
@@ -145,9 +160,10 @@ class Site
       addr = path.relative_path_from(@root).to_s
       addr = RootSectionName if addr == '.'
       @sections[addr] = s
+      @path_cache[:sections] << s.path.address
       s.pages.each do |page|
-        addr = page.path.link.to_s.sub(/^\//, '')
-        @pages[addr] = page
+        @pages[page.path.address] = page
+        @path_cache[:pages] << page.path.address
       end
     end
 
@@ -171,6 +187,10 @@ class Site
   attr_reader :favicon
   attr_reader :site_template
   attr_reader :page_template
+  attr_reader :path_cache_file
+  attr_reader :path_cache
+  attr_reader :old_path_cache
+  attr_reader :smart_rendering
 
 
   #
@@ -207,15 +227,6 @@ class Site
       raise ArgumentError, "No output path named '#{key}'"
     end
     return @output[key]
-  end
-
-  # Access tmp paths by name
-  def tmp(key)
-    key = key.to_sym
-    unless @tmp.keys.member?(key)
-      raise ArgumentError, "No tmp path named '#{key}'"
-    end
-    return @tmp[key]
   end
 
   # Access site sections by name
