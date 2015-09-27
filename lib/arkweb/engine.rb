@@ -43,20 +43,41 @@ class Engine
   end
   attr_reader :pages
 
-  def evaluate_erb(data, env)
+  def evaluate_erb(data, filename=false, **env)
     box = Sandbox.new(env)
-    erb = ERB.new(data)
-    erb.result(box.bindings)
+    begin
+      erb = ERB.new(data)
+      erb.result(box.bindings)
+    rescue => e
+      if filename
+        wrn "Error evaluating ERB in file '#{filename}'"
+      end
+      raise e
+    end
   end
 
-  def evaluate_md(data)
+  def evaluate_md(data, filename=false)
     return unless ARKWEB.optional_gem('rdiscount')
-    RDiscount.new(data).to_html
+    begin
+      RDiscount.new(data).to_html
+    rescue => e
+      if filename
+        wrn "Error evaluating markdown in file '#{filename}'"
+      end
+      raise e
+    end
   end
 
-  def evaluate_wiki(data)
+  def evaluate_wiki(data, filename=false)
     return unless ARKWEB.optional_gem('wikicloth')
-    WikiCloth::Parser.new(:data => data).to_html
+    begin
+      WikiCloth::Parser.new(:data => data).to_html
+    rescue => e
+      if filename
+        wrn "Error evaluating Wiki markup in file '#{filename}'"
+      end
+      raise e
+    end
   end
 
   def render_page(page, index=nil, collection=nil)
@@ -65,17 +86,23 @@ class Engine
     end
     if page.has_erb?
       dbg "Evaluating ERB", 1
-      markup = self.evaluate_erb(page.contents, :site => @site, :section => page.section, :page => page, :index => index, :collection => collection)
+      markup = self.evaluate_erb(page.contents, page.path.input,
+        :site => @site,
+        :section => page.section,
+        :page => page,
+        :index => index,
+        :collection => collection
+      )
     else
       markup = page.contents
     end
     body = case page.type
     when 'md'
       dbg "Evaluating Markdown", 1
-      self.evaluate_md(markup)
+      self.evaluate_md(markup, page.path.input)
     when 'wiki'
       dbg "Evaluating MediaWiki markup", 1
-      self.evaluate_wiki(markup)
+      self.evaluate_wiki(markup, page.path.input)
     when 'html'
       markup
     else
@@ -83,18 +110,18 @@ class Engine
       raise "Cannot render page type: #{page.type}"
     end
     if @page_erb
-      body = self.evaluate_erb(@page_erb,
-        :site => @site,
-        :body => body,
-        :section => page.section,
-        :page => page
+      body = self.evaluate_erb(@page_erb, @site.page_template,
+        site: @site,
+        body: body,
+        section: page.section,
+        page: page
       )
     end
-    return self.evaluate_erb(@site_erb,
-      :site => @site,
-      :body => body,
-      :section => page.section,
-      :page => page
+    return self.evaluate_erb(@site_erb, @site.site_template,
+      site: @site,
+      body: body,
+      section: page.section,
+      page: page
     )
   end
 
