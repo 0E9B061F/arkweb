@@ -5,15 +5,20 @@ class Path
   # give other dirs below this
   def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil)
     @site = site
-    site_root = Pathname.new(@site.root)
-    @input = Pathname.new(input_path)
-    @basename = @input.basename.to_s
-    @name = @basename[/^[^\.]+/]
+    @input = input_path
+
+    if self.root?
+      @basename = '/'
+      @name = '/'
+    else
+      @basename = @input.basename.to_s
+      @name = @basename[/^[^\.]+/]
+    end
 
     @output_dir = @site.out(output_root)
 
     if relative
-      @relative = @input.relative_path_from(site_root).dirname
+      @relative = @input.relative_path_from(@site.root).dirname
       @relative = '' if @relative.to_s == '.'
     else
       @relative = ''
@@ -25,13 +30,21 @@ class Path
       @output_ext = ".#{@output_ext}"
     end
 
-    @fullname = "#{@output_name}#{@output_ext}"
+    if self.root?
+      @fullname = ''
+    else
+      @fullname = "#{@output_name}#{@output_ext}"
+    end
 
-    @output = @output_dir + @relative + @fullname
+    @output = @output_dir.join(@relative).join(@fullname)
 
-    @render_root = Pathname.new(@site.out(:root))
-    @address = @output.relative_path_from(@render_root).to_s
-    @link = "/#{@address}"
+    if self.root?
+      @address = Site::RootSectionName
+      @link = @name
+    else
+      @address = @output.relative_path_from(@site.out(:root)).to_s
+      @link = "/#{@address}"
+    end
   end
   attr_reader :input
   attr_reader :output
@@ -61,7 +74,7 @@ class Path
 
   def paginated_link(index)
     out = self.paginated_output(index)
-    out = out.relative_path_from(@render_root)
+    out = out.relative_path_from(@site.out(:root))
     return "/#{out}"
   end
 
@@ -75,13 +88,21 @@ class Path
     return !@output.exist? || @input.mtime > @output.mtime
   end
 
+  def root?
+    return @input == @site.root
+  end
+
 
   #
   # Internal
   #
 
+  def to_s
+    return @address
+  end
+
   def inspect
-    return "#<AW::Path:#{@link}>"
+    return "#<AW::Path:#{self}>"
   end
 end
 
