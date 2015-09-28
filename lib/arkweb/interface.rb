@@ -10,7 +10,7 @@ class Interface
     msg "Initializing ARKWEB"
     @app = Application.new
 
-    @conf = Ark::CLI.report(args) do |s|
+    @conf = ARK::CLI.report(args) do |s|
       s.name 'ark'
       s.desc 'ARKWEB is a static website compiler'
       s.args "sitepath:#{Dir.pwd}"
@@ -43,8 +43,8 @@ class Interface
 
     @sitepath = Pathname.new(@conf.arg(:sitepath))
 
-    Ark::Log::Conf[:verbose] = @conf.opt(:verbose)
-    Ark::Log::Conf[:quiet]   = @conf.opt(:quiet)
+    ARK::Log::Conf[:verbose] = @conf.opt(:verbose)
+    ARK::Log::Conf[:quiet]   = @conf.opt(:quiet)
   end
 
   attr_reader :version

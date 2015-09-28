@@ -185,7 +185,7 @@ class Engine
         result = @validator.validate_file(page.path.output)
         if result.errors.length > 0
           msg "#{page}: invalid!"
-          result.errors.each {|e| dbg Ark::Text.wrap(e.to_s, indent: 15, indent_after: true), 1 }
+          result.errors.each {|e| dbg ARK::Text.wrap(e.to_s, indent: 15, indent_after: true), 1 }
         else
           msg "#{page}: valid!"
         end

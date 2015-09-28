@@ -6,7 +6,7 @@ require 'erb'
 require 'pathname'
 require 'open-uri'
 
-require 'ark/utility'
+require 'ark/util'
 require 'ark/cli'
 
 require_relative 'arkweb/patches'
@@ -21,7 +21,7 @@ require_relative 'arkweb/section'
 require_relative 'arkweb/engine'
 require_relative 'arkweb/interface'
 
-include Ark::Log
+include ARK::Log
 
 
 module ARKWEB

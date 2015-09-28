@@ -10,9 +10,9 @@ class Application
       f = YAML.load_file(@freeze)
       @version  = f['version']
     else
-      @version  = Ark::Git.version(@root, default: 'DEV VERSION')
+      @version  = ARK::Git.version(@root, default: 'DEV VERSION')
     end
-    @identity = Ark::Git.version_line(@root, default: @version, project: @project)
+    @identity = ARK::Git.version_line(@root, default: @version, project: @project)
   end
   attr_reader :project
   attr_reader :version
