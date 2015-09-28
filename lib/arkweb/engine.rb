@@ -244,8 +244,8 @@ class Engine
       basename = File.basename(hook)
       dbg "Running hook: #{basename}"
       output = `#{hook}`
-      output.split("\n").map {|line| "#{basename}: #{line}" }.each do |line|
-        dbg line, 1
+      output.each_line do |line|
+        dbg "$ #{line}", 1
       end
     end
   end
