@@ -24,7 +24,7 @@ class Section
     header_file = @path.input.join(SectionHeader)
     if header_file.exist?
       header = YAML.load_file(header_file)
-      header = Hash.new(header.map {|k,v| [k.to_sym, v] })
+      header = Hash[header.map {|k,v| [k.to_sym, v] }]
       @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     end
 
