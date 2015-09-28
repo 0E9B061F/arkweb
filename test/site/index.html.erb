@@ -26,7 +26,7 @@ pagesize: 4
 
 <% @site.sections.each do |sec| %>
 	<tr class="list">
-		<td colspan="2"><%= sec.title %> | <%= sec.pages.length %> pages</td>
+		<td colspan="2"><%= sec.conf(:title) %> | <%= sec.pages.length %> pages</td>
 	</tr>
 <% end %>
 
