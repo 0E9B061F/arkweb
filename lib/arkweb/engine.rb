@@ -226,7 +226,7 @@ class Engine
 
   def copy_inclusions
     @site.sections.each do |s|
-      s.inclusions.each do |dest, target|
+      s.conf(:include).each do |dest, target|
         tmp = s.path.output.join(dest)
         target = Pathname.new(target)
         unless target.exist?

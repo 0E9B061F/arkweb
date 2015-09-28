@@ -1,0 +1,7 @@
+---
+title: "Include Testing"
+desc: "This section contains included sections for testing"
+include:
+  foo: /home/nn/code/arkweb/test/include-targets
+  bar: /home/nn/code/arkweb/test/include-targets
+

@@ -3,6 +3,7 @@ module ARKWEB
 class Section
 
   IncludeFileName = 'include.yaml'
+  SectionHeader = 'section.yaml'
 
   def initialize(site, input_path)
     @site = site
@@ -13,12 +14,18 @@ class Section
       Page.new(@site, p, self)
     end
 
-    # Look for an include file
-    include_file = @path.input.join(IncludeFileName)
-    if File.exist?(include_file)
-      @inclusions = YAML.load_file(include_file)
-    else
-      @inclusions = {}
+    @conf = {
+      :title => @path.input.basename.to_s.capitalize,
+      :desc => false,
+      :include => {},
+      :autoindex => false
+    }
+    # Look for a section header file
+    header_file = @path.input.join(SectionHeader)
+    if header_file.exist?
+      header = YAML.load_file(header_file)
+      header = Hash.new(header.map {|k,v| [k.to_sym, v] })
+      @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     end
 
     # Order pages by ctime and give them an index
@@ -26,16 +33,19 @@ class Section
     @ordered_pages.each_with_index do |page,i|
       page.index = i + 1
     end
-
-    # Get a title for this section
-    @title = @path.input.basename.to_s.capitalize
   end
   attr_reader :site
   attr_reader :path
   attr_reader :pages
-  attr_reader :title
   attr_reader :ordered_pages
-  attr_reader :inclusions
+
+  def conf(key)
+    key = key.to_sym
+    unless @conf.has_key?(key)
+      raise ArgumentError "No such configuration: #{key}"
+    end
+    return @conf[key]
+  end
 
   def page_count
     return @pages.length
