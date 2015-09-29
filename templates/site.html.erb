@@ -8,10 +8,10 @@
       <meta content="<%= @site.conf(:xuacompat) %>" http-equiv="X-UA-Compatible" />
     <% end %>
 
-    <title><%= @site.conf(:title) %></title>
+    <title><%= @helper.full_title %></title>
 
     <%= @site.meta 'author',      @site.conf(:author) %>
-    <%= @site.meta 'description', @site.conf(:desc) %>
+    <%= @site.meta 'description', @helper.full_description %>
     <%= @site.meta 'keywords',    @site.conf(:keywords) %>
     <%= @site.meta 'generator',   @site.app.identity %>
 

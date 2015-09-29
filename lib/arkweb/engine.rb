@@ -84,14 +84,16 @@ class Engine
     if index
       dbg "Rendering index #{index}", 1
     end
+    helper = Helper.new(@site, page.section, page)
     if page.has_erb?
       dbg "Evaluating ERB", 1
       markup = self.evaluate_erb(page.contents, page.path.input,
-        :site => @site,
-        :section => page.section,
-        :page => page,
-        :index => index,
-        :collection => collection
+        site: @site,
+        section: page.section,
+        page: page,
+        helper: helper,
+        index: index,
+        collection: collection
       )
     else
       markup = page.contents
@@ -112,16 +114,18 @@ class Engine
     if @page_erb
       body = self.evaluate_erb(@page_erb, @site.page_template,
         site: @site,
-        body: body,
         section: page.section,
-        page: page
+        page: page,
+        helper: helper,
+        body: body
       )
     end
     return self.evaluate_erb(@site_erb, @site.site_template,
       site: @site,
-      body: body,
       section: page.section,
-      page: page
+      page: page,
+      helper: helper,
+      body: body
     )
   end
 

@@ -16,27 +16,37 @@ class Page
       @type = @path.basename[/^.+?\.(.+)$/, 1]
     end
 
-    @text = @path.input.read
-    if (md = @text.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m))
+    data = @path.input.read
+    if (md = data.match(/^(?<metadata>---\s*\n.*?\n?)^(---\s*$\n?)/m))
       @contents = md.post_match
       yaml = md[:metadata]
       box  = Engine::Sandbox.new(:site => @site)
       erb  = ERB.new(yaml)
       yaml = erb.result(box.bindings)
-      @metadata = YAML.load(yaml)
-      @has_metadata = true
+      header = YAML.load(yaml)
     else
-      @contents = @text
-      @metadata = {}
-      @has_metadata = false
+      @contents = data
+      header = {}
     end
 
-    @title = @metadata['title'] || @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
-    @tags = @metadata['keywords'] || @metadata['tags'] || []
-    @collect = [@metadata['collect']].flatten.map(&:to_s)
-    @pagesize = @metadata['pagesize']
-    @pagesize = @pagesize.to_i if @pagesize
-    @description = @metadata['description'] || nil
+    @conf = {
+      :title => @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join,
+      :desc => false,
+      :keywords => [],
+      :collect => [],
+      :pagesize => false
+    }
+    unless header.empty?
+      header = Hash[header.map {|k,v| [k.to_sym, v] }]
+      @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
+    end
+    @conf[:collect] = @conf[:collect].flatten.map(&:to_s)
+    @conf[:pagesize] = @conf[:pagesize].to_i if @conf[:pagesize]
+
+    @title = self.conf(:title)
+    @desc = self.conf(:desc) || ''
+    @collect = self.conf(:collect)
+    @pagesize = self.conf(:pagesize) ? self.conf(:pagesize).to_i : false
   end
   attr_reader :site
   attr_reader :path
@@ -44,12 +54,18 @@ class Page
   attr_reader :type
   attr_reader :title
   attr_reader :contents
-  attr_reader :has_metadata
-  attr_reader :metadata
   attr_reader :collect
   attr_reader :pagesize
-  attr_reader :description
+  attr_reader :desc
   attr_accessor :index
+
+  def conf(key)
+    key = key.to_sym
+    unless @conf.has_key?(key)
+      raise ArgumentError "No such configuration: #{key}"
+    end
+    return @conf[key]
+  end
 
   def has_erb?
     return @erb

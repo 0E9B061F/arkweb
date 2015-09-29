@@ -18,6 +18,7 @@ require_relative 'arkweb/favicon'
 require_relative 'arkweb/page'
 require_relative 'arkweb/stylesheet'
 require_relative 'arkweb/section'
+require_relative 'arkweb/helper'
 require_relative 'arkweb/engine'
 require_relative 'arkweb/interface'
 

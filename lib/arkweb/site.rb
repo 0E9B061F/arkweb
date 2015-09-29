@@ -171,6 +171,10 @@ class Site
       FileUtils.mkdir_p(@output[dir])
     end
 
+    # Convenience
+    @title = self.conf(:title)
+    @desc = self.conf(:desc) || ''
+
     @engine = Engine.new(self)
   end
 
@@ -178,6 +182,8 @@ class Site
   attr_reader :engine
   attr_reader :root
   attr_reader :name
+  attr_reader :title
+  attr_reader :desc
   attr_reader :input
   attr_reader :output
   attr_reader :styles

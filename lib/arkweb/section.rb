@@ -33,9 +33,14 @@ class Section
     @ordered_pages.each_with_index do |page,i|
       page.index = i + 1
     end
+
+    @title = self.conf(:title)
+    @desc = self.conf(:desc) || ''
   end
   attr_reader :site
   attr_reader :path
+  attr_reader :title
+  attr_reader :desc
   attr_reader :pages
   attr_reader :ordered_pages
 
