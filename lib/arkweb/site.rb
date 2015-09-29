@@ -70,6 +70,9 @@ class Site
     @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     @conf.select! {|k,v| defaults.keys.member?(k) }
 
+    @conf[:tmp] = Pathname.new(@conf[:tmp]) if @conf[:tmp]
+    @conf[:output] = Pathname.new(@conf[:output]) if @conf[:output]
+
     # Paths to where output files will be located
     @output = {}
     @output[:tmp]      = @conf[:tmp] || @input[:arkweb].join('tmp')
