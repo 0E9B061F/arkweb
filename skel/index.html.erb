@@ -1,24 +1,26 @@
 ---
-title: <%= @site.info(:title) %> Index
+title: <%= @site.title %> Index
 collect: posts
 pagesize: 5
 ---
+
+<%= @site.img('logo.png') %>
 
 <p>
 This is an example page in ERB. The Site instance is available as @site.
 </p>
 
 <p>
-Site title: <%= @site.info(:title) %><br/>
-Site desc.: <%= @site.info(:desc) %><br/>
-Site author: <%= @site.info(:author) %><br/>
+Site title: <%= @site.title %><br/>
+Site desc.: <%= @site.desc %><br/>
+Site author: <%= @site.conf(:author) %><br/>
 </p>
 
 <% @collection.paginate(@index).each do |page| %>
   <div class="page-card">
     <span class="card-title"><%= page.title %></span>
-    <% if page.description %>
-      <p class="card-description"><%= page.description %></p>
+    <% if page.desc %>
+      <p class="card-description"><%= page.desc %></p>
     <% end %>
   </div>
 <% end %>
