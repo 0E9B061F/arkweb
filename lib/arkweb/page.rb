@@ -40,7 +40,7 @@ class Page
       header = Hash[header.map {|k,v| [k.to_sym, v] }]
       @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     end
-    @conf[:collect] = @conf[:collect].flatten.map(&:to_s)
+    @conf[:collect] = [@conf[:collect]].flatten.map(&:to_s)
     @conf[:pagesize] = @conf[:pagesize].to_i if @conf[:pagesize]
 
     @title = self.conf(:title)
