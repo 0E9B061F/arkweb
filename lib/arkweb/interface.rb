@@ -38,6 +38,9 @@ class Interface
       s.opt :minify, :m,
       desc: 'Minify CSS and Javascript on rendering'
 
+      s.opt :watch, :w,
+      desc: 'Watch the site directory and re-render on changes'
+
       s.raise_on_trailing
     end
 
@@ -50,6 +53,15 @@ class Interface
   attr_reader :version
 
   attr_reader :identity
+
+  def watch
+    w = ARK::Watcher.new(@sitepath)
+    w.hook('any file', 'created directory', 'deleted directory') do
+      site = Site.new(@sitepath, @conf)
+      site.engine.write_site
+    end
+    w.begin
+  end
 
   # Render an existing site directory, generating HTML files to the output
   # directory. This is called from Interface#run
@@ -73,7 +85,11 @@ class Interface
   # Either render an existing site or initialize a new site
   def run
     if @sitepath.directory?
-      self.render
+      if @conf.opt(:watch)
+        self.watch
+      else
+        self.render
+      end
     elsif !@sitepath.exist?
       self.init
     else
