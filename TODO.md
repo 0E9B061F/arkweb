@@ -22,11 +22,6 @@ template would be used, rendered within the page template. this could be a
 generic template supplied in the program dir, replacable by the user in the AW
 dir.
 
-each section should have its own section.yaml, similar to the site's header.yaml
-this could be used to set things like the section title, or set whether an
-automatic index should be built. this is equivalent to frontmatter for
-individual pages.
-
 yaml frontmatter on stylseets with heritable attribute
 
 for stylesheets and javascript in the site structure, some way to determine
@@ -46,14 +41,6 @@ included, but only if the user requests it - this way normal ARKWEB-style pages
 can be included and rendered, but complete HTML files from other sources can
 also be included without getting wrapped in a template.
 
-if we implement `section.yaml`, then `include.yaml` should be moved to an
-attribute in `section.yaml`, ie:
-
-```
-include:
-  foo: /some/path
-  bar: /another/path
-```
 
 apple icon support, windows tile support
 
