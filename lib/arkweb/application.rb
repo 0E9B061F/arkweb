@@ -6,7 +6,7 @@ class Application
     @project = 'ARKWEB'
     @freeze  = self.root('freeze.yaml')
 
-    if File.exist?(@freeze)
+    if @freeze.exist?
       f = YAML.load_file(@freeze)
       @version  = f['version']
     else
