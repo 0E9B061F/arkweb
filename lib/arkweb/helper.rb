@@ -7,11 +7,34 @@ class Helper
     @section = section
   end
 
+  private
+
+  def mk_id(id=nil)
+    return id ? %Q( id="#{id}") : nil
+  end
+
+  def mk_klass(klass=nil)
+    return klass ? %Q( class="#{klass}") : nil
+  end
+
+  public
+
   # Create a span. Mostly meant for internal use
   def span(content, id: nil, klass: nil)
-    id = %Q( id="#{id}") if id
-    klass = %Q( class="#{klass}") if klass
+    id = mk_id(id)
+    klass = mk_klass(klass)
     return %Q(<span#{id}#{klass}>#{content}</span>)
+  end
+
+  def list(items, ordered: false, id: nil, klass: nil, itemklass: nil)
+    id = mk_id(id)
+    klass = mk_klass(klass)
+    itemklass = mk_klass(klass)
+    tag = ordered ? "ol" : "ul"
+    items.map! do |i|
+      %Q(<li#{itemklass}>#{i}</li>)
+    end
+    return %Q(<#{tag}#{id}#{klass}>#{items.join}</#{tag}>)
   end
 
   # Return the full title for a given page, constructed from the site title,
@@ -40,6 +63,28 @@ class Helper
     seperator = self.span(seperator, klass: "aw-trail-seperator")
     trail = trail.join(seperator)
     return self.span(trail, klass: "aw-trail")
+  end
+
+  def list_pages(section: false, span: true, linked: true)
+    if section
+      section = @site.section(section)
+    else
+      section = @section
+    end
+    list = []
+    section.pages.each do |p|
+      if linked && p != @page
+        list << p.link_to(klass: "aw-page-list-link")
+      else
+        list << self.span(p.title, klass: "aw-page-list-title")
+      end
+    end
+    if span
+      list = list.join(' ')
+      return self.span(list, klass: "aw-page-list")
+    else
+      return self.list(list, klass: "aw-page-list")
+    end
   end
 end
 
