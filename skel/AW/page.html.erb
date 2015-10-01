@@ -1,4 +1,19 @@
-<h1>Page: <%= @page.title %></h1>
+<div class="header">
+  <div class="centerer flexer">
+    <a href="/"><%= @site.img('logo.png', klass: 'logo') %></a>
+    <h1 class="title"><a href="/"><span class="ark">ARK</span><span class="web">WEB</span>&ensp;Example Site</a></h1>
+  </div>
+</div>
 
-<%= @body %>
+<div class="subheader">
+  <div class="centerer">
+    <%= @helper.trail('&ensp;&#10145;&ensp;') %>
+  </div>
+</div>
+
+<div class="content">
+  <div class="centerer">
+    <%= @body %>
+  </div>
+</div>
 

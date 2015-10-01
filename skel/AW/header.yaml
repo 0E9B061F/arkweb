@@ -1,5 +1,9 @@
 ---
-title: Untitled
+title: ARKWEB Example
 desc: A freshly-minted website by ARKWEB
 author: Anonymous
+google_fonts:
+  - Josefin Sans
+  - Open Sans
+  - Ubuntu
 

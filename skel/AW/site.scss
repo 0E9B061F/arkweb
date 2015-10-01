@@ -1,7 +1,104 @@
-$red: #6e7fd2;
+$black: #191919;
+$dark-gray: #252525;
+$light-gray: #454545;
+$white: #FEFEFF;
+
+$light-blue: #8091e2;
+$blue: #6e7fd2;
+$dark-blue: #606eb6;
+$darkest-blue: #3a4a70;
+
+$content-width: 800px;
 
 body {
-  color: white;
-  background-color: $red;
+  color: $black;
+  background-color: $white;
+  margin: 0;
+}
+
+.centerer {
+  width: $content-width;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.flexer {
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  background-color: $darkest-blue;
+  color: $white;
+  padding-top: 2em;
+  padding-bottom: 2em;
+}
+
+.logo {
+  flex: none;
+  width: auto;
+  height: auto;
+}
+
+.title {
+  font-family: "Josefin Sans", sans;
+  margin: 0;
+  font-weight: normal;
+  font-size: 2em;
+  line-height: 2em;
+  position: relative;
+  top: 6px;
+  right: 13px;
+  .ark {
+    color: $blue;
+    font-weight: bold;
+  }
+  .web {
+    color: $dark-blue;
+    font-weight: bold;
+  }
+  a {
+    color: $white;
+    text-decoration: none;
+  }
+}
+
+.subheader {
+  background-color: $dark-gray;
+  color: $white;
+  padding-top: 0.9em;
+  padding-bottom: 0.9em;
+}
+
+.aw-trail {
+  font-family: "Ubuntu", sans;
+  font-size: 1.5em;
+  .aw-trail-section {
+    vertical-align: middle;
+  }
+  .aw-trail-seperator {
+    vertical-align: middle;
+    font-size: 0.7em;
+    color: $light-gray;
+  }
+  .aw-trail-page {
+    vertical-align: middle;
+  }
+  a {
+    color: $light-blue;
+    text-decoration: none;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  a:visited {
+    color: $blue;
+  }
+  a:hover {
+    background-color: $light-gray;
+  }
+}
+
+.content {
+  font-family: "Open Sans", sans;
 }
 

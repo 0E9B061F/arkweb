@@ -1,13 +1,12 @@
 ---
-title: <%= @site.title %> Index
+title: Home
+desc: Example home page. Links to ARKWEB documentation and examples of ARKWEB usage.
 collect: posts
 pagesize: 5
 ---
 
-<%= @site.img('logo.png') %>
-
 <p>
-This is an example page in ERB. The Site instance is available as @site.
+Welcome to your new ARKWEB site!
 </p>
 
 <p>
@@ -18,7 +17,7 @@ Site author: <%= @site.conf(:author) %><br/>
 
 <% @collection.paginate(@index).each do |page| %>
   <div class="page-card">
-    <span class="card-title"><%= page.title %></span>
+    <span class="card-title"><%= page.link_to %></span>
     <% if page.desc %>
       <p class="card-description"><%= page.desc %></p>
     <% end %>
