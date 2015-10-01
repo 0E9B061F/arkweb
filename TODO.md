@@ -41,7 +41,19 @@ included, but only if the user requests it - this way normal ARKWEB-style pages
 can be included and rendered, but complete HTML files from other sources can
 also be included without getting wrapped in a template.
 
-
 apple icon support, windows tile support
+
+when in watch mode, disable message times
+
+linked trail method on helper
+
+move the various helper methods found on Site to Helper
+
+smart rendering: when a template is modified, make sure all pages are
+re-rendered
+
+builtin support for a development server
+ark serve
+ark unserve
 
 
