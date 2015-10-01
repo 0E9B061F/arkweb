@@ -59,10 +59,10 @@ class Section
   def link_to(**options)
     text  = options[:text]  || @title
     id    = options[:id]    || nil
-    klass = options[:class] || nil
+    klass = options[:klass] || nil
     id    = %Q( id="#{id}")       if id
     klass = %Q( class="#{klass}") if klass
-    return %Q(<a#{id}#{klass} href="#{@relative}">#{text}</a>)
+    return %Q(<a#{id}#{klass} href="#{@path.link}">#{text}</a>)
   end
 
   def inspect
