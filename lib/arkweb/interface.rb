@@ -41,6 +41,13 @@ class Interface
       s.opt :watch, :w,
       desc: 'Watch the site directory and re-render on changes'
 
+      s.opt :deploy, :d,
+      desc: 'Deploy output after rendering'
+
+      s.opt :remote, :r,
+      args: 'address',
+      desc: 'Specify a remote location to deploy to'
+
       s.raise_on_trailing
     end
 

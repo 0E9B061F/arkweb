@@ -60,7 +60,8 @@ class Site
       :deploy => false,
       :output => false,
       :tmp => false,
-      :cache => false
+      :cache => false,
+      :remote => false
     }
     @conf = defaults
     if conf

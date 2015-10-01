@@ -282,18 +282,22 @@ class Engine
   end
 
   def deploy
-    addr = @site.conf(:deploy)
-    if addr
-      msg "Deploying to #{addr['host']}"
-      if addr['ssh']
-        if addr['port']
-          port = "-p #{addr['port']}"
+    if @site.conf(:deploy)
+      unless @site.conf(:remote)
+        raise EngineError, "Asked to deploy but no remote was given. Specify a remote location with `--remote`"
+      end
+      addr = URI(@site.conf(:remote))
+      msg "Deploying to #{addr}"
+      host = "#{addr.host}:#{addr.path}"
+      if addr.scheme == 'ssh'
+        if addr.port
+          port = "-p #{addr.port}"
         else
           port = ''
         end
-        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:root)}/ #{addr['host']}`
+        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:root)}/ #{host}`
       else
-        `rsync -az --delete-before #{@site.out(:root)}/ #{addr['host']}`
+        `rsync -az --delete-before #{@site.out(:root)}/ #{host}`
       end
     end
   end
