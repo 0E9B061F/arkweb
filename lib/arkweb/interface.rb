@@ -7,7 +7,6 @@ class Interface
 
   # Initialize a new Interface object
   def initialize(args=ARGV)
-    msg "Initializing ARKWEB"
     @app = Application.new
 
     @conf = ARK::CLI.report(args) do |s|
@@ -51,10 +50,13 @@ class Interface
       s.raise_on_trailing
     end
 
-    @sitepath = Pathname.new(@conf.arg(:sitepath))
-
     ARK::Log::Conf[:verbose] = @conf.opt(:verbose)
     ARK::Log::Conf[:quiet]   = @conf.opt(:quiet)
+
+    msg "Initializing ARKWEB"
+
+    @sitepath = Pathname.new(@conf.arg(:sitepath))
+
   end
 
   attr_reader :version
