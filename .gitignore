@@ -11,3 +11,4 @@ test/site/AW/cache
 test/site/AW/tmp
 freeze.yaml
 skel/AW/output/
+graphics/
