@@ -1,5 +1,109 @@
-$bg: #067fd2;
+$white: #fefeff;
+
+$mono: "Consolas", monospace;
+$sans: "Open Sans", "Ubuntu", sans;
 
 body {
-  background-color: $bg;
+  font-family: $mono;
+  background-color: $white;
 }
+
+.page {
+  width: 1024px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.header {
+  font-family: $mono;
+  border-bottom: 2px solid #454545;
+  margin-bottom: 1em;
+  padding-bottom: 1em;
+  h1, h2, h3 {
+    margin: 0;
+    display: inline;
+  }
+  h2, h3 {
+    font-weight: normal;
+  }
+}
+
+.version {
+}
+
+.content {
+}
+
+p {
+  font-size: 2em;
+}
+
+table {
+	font-size: 1.2em;
+  padding: 0;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.table-half {
+  float: left;
+  width: 512px;
+}
+
+tr {
+  margin: 0;
+}
+tr.list {
+	text-align: right;
+  display: inline-block;
+}
+
+td {
+  margin: 0;
+	background-color: white;
+  padding-left: 0.5em;
+}
+
+th {
+  width: 1%;
+  white-space: nowrap;
+  padding-left: 1em;
+  padding-right: 0.5em;
+	text-align: right;
+}
+
+.pagination-example {
+  clear: left;
+}
+
+.code {
+  font-family: $mono;
+}
+
+caption {
+  padding-top: 0.5em;
+  padding-bottom: 0.25em;
+  text-align: left;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.squirrel-1 {
+  font-family: KingthingsVersalisRegular;
+}
+.squirrel-2 {
+  font-family: NoticeNotice;
+}
+.squirrel-3 {
+  font-family: AquilineRegular;
+}
+.squirrel-4 {
+  font-family: LobsterTwoRegular;
+}
+.google-1 {
+  font-family: Megrim;
+}
+.google-2 {
+  font-family: Pompiere;
+}
+

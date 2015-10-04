@@ -1,56 +1,68 @@
 ---
-collect: [articles, posts, posts/scratch]
+collect: [/articles, /posts, /posts/scratch]
 pagesize: 4
 ---
 
-<table>
+<table class="table-half">
+<caption>General</caption>
 
 <tr>
-	<td class="label">Site title:</td>
+	<th>Site title:</th>
 	<td><%= @site.conf(:title) %></tr>
 </tr>
 
 <tr>
-	<td class="label">Page count:</td>
-	<td><%= @site.pages.length %></td>
+	<th>Page count:</th>
+	<td class="code"><%= @site.pages.length %></td>
 </tr>
 
 <tr>
-	<td class="label">Sections:</td>
-	<td><%= @site.sections.length %></td>
+  <th>Sections:</th>
+	<td class="code"><%= @site.sections.length %></td>
 </tr>
 
-<tr>
-	<td class="label" colspan="2">Sections list:</td>
-</tr>
+</table>
 
-<% @site.sections.each do |sec| %>
-	<tr class="list">
-		<td colspan="2"><%= sec.conf(:title) %> | <%= sec.pages.length %> pages</td>
-	</tr>
-<% end %>
+<table class="table-half">
+  <caption>Sections</caption>
 
-<tr>
-<td class="label" colspan="2">Page list:</td>
-</tr>
+  <tbody>
+  <% @site.sections.each do |sec| %>
+    <tr>
+      <th><%= sec.conf(:title) %></th>
+      <td class="code"><%= sec.pages.length %> pages</td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<table>
+
+<caption>Page List</caption>
 
 <% @site.pages.each do |page| %>
 	<tr class="list">
-		<td colspan="2"><%= page.link_to() %></td>
+		<td><%= page.link_to() %></td>
 	</tr>
 <% end %>
 
-<tr>
-<td class="label" colspan="2">Metadata:</td>
-</tr>
+</table>
+
+<table>
+
+<caption>Configuration</caption>
 
 <% @site.configs.each do |k,v| %>
 	<% v = v.join(', ') if v.is_a?(Array) %>
 	<tr>
-		<td class="label"><%= k %></td>
-		<td><%= v %></td>
+		<th><%= k %></th>
+		<td class="code"><%= v %></td>
 	</tr>
 <% end %>
+
+</table>
+
+<table>
 
 <tr>
 <td>An image:</td>
@@ -59,11 +71,12 @@ pagesize: 4
 
 </table>
 
-<h1>Pagination:</h1>
+<div class="pagination-example">
+<h2>Pagination:</h2>
 
 <% @collection.paginate(@index).each do |page| %>
   <p><%= page.title %></p>
 <% end %>
 
 <%= @collection.links(@index) %>
-
+</div>

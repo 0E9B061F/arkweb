@@ -1,4 +1,14 @@
-<h1>Welcome to Test Site!</h1>
+<div class="page">
 
-<%= @body %>
+<div class="header">
+  <h1>AW Test Site</h1>
+  <h3>As rendered by: <span class="version"><%= @site.app.identity %></span></h3>
+  <br/>
+  <h2>Location: <%= @helper.trail %></h2>
+</div>
 
+<div class="content">
+  <%= @body %>
+</div>
+
+</div>
