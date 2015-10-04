@@ -1,3 +1,9 @@
+<div class="header-bar superheader">
+  <div class="centerer">
+    <%= @helper.list_pages %>
+  </div>
+</div>
+
 <div class="header">
   <div class="centerer flexer">
     <a href="/"><%= @site.img('logo.png', klass: 'logo') %></a>
@@ -5,11 +11,9 @@
   </div>
 </div>
 
-<div class="subheader">
+<div class="header-bar subheader">
   <div class="centerer">
     <%= @helper.trail('&ensp;&#10145;&ensp;') %>
-    <br/>
-    <%= @helper.list_pages %>
   </div>
 </div>
 

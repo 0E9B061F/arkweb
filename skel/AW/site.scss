@@ -63,15 +63,35 @@ body {
   }
 }
 
-.subheader {
+.header-bar {
   background-color: $dark-gray;
   color: $white;
+  font-family: "Ubuntu", sans;
+  a {
+    color: $light-blue;
+    text-decoration: none;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  a:visited {
+    color: $blue;
+  }
+  a:hover {
+    background-color: $light-gray;
+  }
+}
+
+.subheader {
   padding-top: 0.9em;
   padding-bottom: 0.9em;
 }
 
+.superheader {
+  padding-top: 0.2em;
+  padding-bottom: 0.3em;
+}
+
 .aw-trail {
-  font-family: "Ubuntu", sans;
   font-size: 1.5em;
   .aw-trail-section {
     vertical-align: middle;
@@ -84,17 +104,13 @@ body {
   .aw-trail-page {
     vertical-align: middle;
   }
-  a {
-    color: $light-blue;
-    text-decoration: none;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  a:visited {
-    color: $blue;
-  }
-  a:hover {
-    background-color: $light-gray;
+}
+
+.aw-page-list {
+  font-family: "Open Sans", sans;
+  font-size: 1.1em;
+  .aw-page-list-link, .aw-page-list-title {
+    padding-right: 1em;
   }
 }
 
