@@ -67,6 +67,18 @@ class Page
     return @conf[key]
   end
 
+  def index?
+    return @path.name == 'index'
+  end
+
+  def trail
+    if index?
+      return @path.link.dirname
+    else
+      return @path.link
+    end
+  end
+
   def has_erb?
     return @erb
   end

@@ -56,10 +56,12 @@ class Helper
   # Return a linked trail from the site root for the current page
   def trail(seperator=' > ')
     trail = []
-    Pathname.new(@section.path.address).descend do |a|
-      trail << @site.section(a).link_to(klass: "aw-trail-section")
+    @page.trail.descend do |a|
+      trail << a
     end
-    trail << self.span(@page.title, klass: "aw-trail-page")
+    last = @site.addr(trail.pop).title
+    trail.map! {|a| @site.section(a).link_to(klass: "aw-trail-section") }
+    trail << self.span(last, klass: "aw-trail-page")
     seperator = self.span(seperator, klass: "aw-trail-seperator")
     trail = trail.join(seperator)
     return self.span(trail, klass: "aw-trail")

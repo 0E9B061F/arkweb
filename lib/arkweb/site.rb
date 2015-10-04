@@ -127,7 +127,7 @@ class Site
     favicon_path = @input[:arkweb].glob(Types[:icon]).first
     if favicon_path
       @favicon = Favicon.new(self, favicon_path)
-      @path_cache[:favicons] += @favicon.formats.map {|f| f.path.address }
+      @path_cache[:favicons] += @favicon.formats.map {|f| f.path.link }
     else
       @favicon = nil
     end
@@ -141,7 +141,7 @@ class Site
     sheets.each do |s|
       s = Stylesheet.new(self, s)
       @styles[s.name] = s
-      @path_cache[:stylesheets] << s.path.address
+      @path_cache[:stylesheets] << s.path.link
     end
 
     # Return a list of sections, which are any subdirectories excluding special subdirectories
@@ -161,13 +161,11 @@ class Site
     @pages = {}
     subdirs.each do |path|
       s = Section.new(self, path)
-      addr = path.relative_path_from(@root).to_s
-      addr = RootSectionName if addr == '.'
-      @sections[addr] = s
-      @path_cache[:sections] << s.path.address
+      @sections[s.path.link] = s
+      @path_cache[:sections] << s.path.link
       s.pages.each do |page|
-        @pages[page.path.address] = page
-        @path_cache[:pages] << page.path.address
+        @pages[page.path.link] = page
+        @path_cache[:pages] << page.path.link
       end
     end
 
@@ -241,11 +239,11 @@ class Site
 
   # Access site sections by name
   def section(key)
-    clean = key.to_s.gsub(/(^\/)|(\/$)/, '')
-    unless @sections.keys.member?(clean)
+    key = Pathname.new(key) unless key.is_a?(Pathname)
+    unless @sections.has_key?(key)
       raise ArgumentError, "No section named '#{key}'"
     end
-    return @sections[clean]
+    return @sections[key]
   end
 
   # Return an array of all sections in the site
@@ -255,16 +253,28 @@ class Site
 
   # Access pages by name
   def page(key)
-    clean = key.to_s.gsub(/(^\/)|(\/$)/, '')
-    unless @pages.keys.member?(clean)
+    key = Pathname.new(key) unless key.is_a?(Pathname)
+    unless @pages.has_key?(key)
       raise ArgumentError, "No page named '#{key}'"
     end
-    return @pages[clean]
+    return @pages[key]
   end
 
   # Return an array of all pages on the site
   def pages
     return @pages.values
+  end
+
+  # Get sections and pages by their link path
+  def addr(path)
+    path = Pathname.new(path) unless path.is_a?(Pathname)
+    if @pages.has_key?(path)
+      return @pages[path]
+    elsif @sections.has_key?(path)
+      return @sections[path]
+    else
+      raise ArgumentError, "No such address: #{path}"
+    end
   end
 
 
@@ -334,7 +344,7 @@ class Site
   #
 
   def inspect
-    return "#<AW::Site:#{@conf[:title]}>"
+    return %Q(#<AW::Site:"#{@conf[:title]}">)
   end
 end # class Site
 

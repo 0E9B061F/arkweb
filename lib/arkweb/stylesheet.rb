@@ -38,7 +38,7 @@ class Stylesheet
 
   # Represent this object as the working path to the given stylesheet
   def to_s()
-    return @path.link
+    return @path.input_relative.to_s
   end
 
   # Return a link to this stylesheet
@@ -47,7 +47,7 @@ class Stylesheet
   end
 
   def inspect
-    return "#<AW::Stylesheet:#{@path.link}>"
+    return "#<AW::Stylesheet:#{self}>"
   end
 end
 

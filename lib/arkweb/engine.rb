@@ -311,7 +311,7 @@ class Engine
     return unless @site.smart_rendering
     @site.pages.each do |page|
       if page.path.changed?
-        @changed_sections << page.section.path.address
+        @changed_sections << page.section.path.link
       end
     end
     @site.path_cache.each do |type,paths|
@@ -319,9 +319,10 @@ class Engine
       @cropped[type] = leftovers
       @cropped[type].each do |path|
         if type == :pages
-          sec_address = File.dirname(path)
-          sec_address = Site::RootSectionName if sec_address == '.'
-          @changed_sections << @site.section(sec_address).path.address
+          sec_link = Pathname.new(File.dirname(path))
+          root = Pathname.new('/')
+          sec_link = root.join(sec_link)
+          @changed_sections << @site.section(sec_link).path.link
         end
       end
     end

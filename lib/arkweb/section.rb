@@ -14,8 +14,14 @@ class Section
       Page.new(@site, p, self)
     end
 
+    if self.root?
+      title = "Home"
+    else
+      title = @path.link.basename.to_s.capitalize
+    end
+
     @conf = {
-      :title => @path.input.basename.to_s.capitalize,
+      :title => title,
       :desc => false,
       :include => {},
       :autoindex => false
@@ -50,6 +56,10 @@ class Section
       raise ArgumentError "No such configuration: #{key}"
     end
     return @conf[key]
+  end
+
+  def root?
+    return @path.link == Pathname.new('/')
   end
 
   def page_count

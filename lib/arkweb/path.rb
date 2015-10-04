@@ -17,41 +17,38 @@ class Path
 
     @output_dir = @site.out(output_root)
 
-    if relative
-      @relative = @input.relative_path_from(@site.root).dirname
-      @relative = '' if @relative.to_s == '.'
-    else
-      @relative = ''
-    end
+    @input_relative = @input.relative_path_from(@site.root)
+
+    @relative = @input_relative.dirname
+    @relative = '' if @relative.to_s == '.'
 
     @output_name = output_name || @name
     @output_ext = output_ext || @input.extname
     if !@output_ext.empty? && !@output_ext[/^\./]
       @output_ext = ".#{@output_ext}"
     end
+    @output_fullname = "#{@output_name}#{@output_ext}"
 
-    if self.root?
-      @fullname = ''
+    @output = if relative
+      @output_dir.join(@relative).join(@output_fullname)
     else
-      @fullname = "#{@output_name}#{@output_ext}"
+      @output_dir.join(@output_fullname)
     end
 
-    @output = @output_dir.join(@relative).join(@fullname)
-
+    root = Pathname.new('/')
     if self.root?
-      @address = Site::RootSectionName
-      @link = @name
+      @link = root
     else
-      @address = @output.relative_path_from(@site.out(:root)).to_s
-      @link = "/#{@address}"
+      address = @output.relative_path_from(@site.out(:root))
+      @link = root.join(address)
     end
   end
   attr_reader :input
   attr_reader :output
+  attr_reader :input_relative
   attr_reader :link
   attr_reader :name
   attr_reader :basename
-  attr_reader :address
 
   
   #
@@ -98,7 +95,7 @@ class Path
   #
 
   def to_s
-    return @address
+    return @link.to_s
   end
 
   def inspect
