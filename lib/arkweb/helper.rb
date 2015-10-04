@@ -65,7 +65,7 @@ class Helper
     return self.span(trail, klass: "aw-trail")
   end
 
-  def list_pages(section: false, span: true, linked: true)
+  def list_pages(section: false, span: true, linked: true, hide_current: false)
     if section
       section = @site.section(section)
     else
@@ -73,10 +73,12 @@ class Helper
     end
     list = []
     section.pages.each do |p|
-      if linked && p != @page
-        list << p.link_to(klass: "aw-page-list-link")
-      else
-        list << self.span(p.title, klass: "aw-page-list-title")
+      unless p == @page && hide_current
+        if linked && p != @page
+          list << p.link_to(klass: "aw-page-list-link")
+        else
+          list << self.span(p.title, klass: "aw-page-list-title")
+        end
       end
     end
     if span
