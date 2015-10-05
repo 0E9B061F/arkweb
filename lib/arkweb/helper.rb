@@ -1,32 +1,30 @@
 module ARKWEB
 
-class Helper
-  def initialize(site, section, page)
-    @site = site
-    @page = page
-    @section = section
+class HTML
+
+  def self.link_to(object, text: nil, id: nil, klass: nil, index: nil)
+    id = mk_id(id)
+    klass = mk_klass(klass)
+
+    text = object.title unless text
+
+    if index
+      link = object.path.paginated_link(index)
+    else
+      link = object.path.link
+    end
+
+    return %Q(<a#{id}#{klass} href="#{link}">#{text}</a>)
   end
-
-  private
-
-  def mk_id(id=nil)
-    return id ? %Q( id="#{id}") : nil
-  end
-
-  def mk_klass(klass=nil)
-    return klass ? %Q( class="#{klass}") : nil
-  end
-
-  public
 
   # Create a span. Mostly meant for internal use
-  def span(content, id: nil, klass: nil)
+  def self.span(content, id: nil, klass: nil)
     id = mk_id(id)
     klass = mk_klass(klass)
     return %Q(<span#{id}#{klass}>#{content}</span>)
   end
 
-  def list(items, ordered: false, id: nil, klass: nil, itemklass: nil)
+  def self.list(items, ordered: false, id: nil, klass: nil, itemklass: nil)
     id = mk_id(id)
     klass = mk_klass(klass)
     itemklass = mk_klass(klass)
@@ -35,6 +33,24 @@ class Helper
       %Q(<li#{itemklass}>#{i}</li>)
     end
     return %Q(<#{tag}#{id}#{klass}>#{items.join}</#{tag}>)
+  end
+
+  def self.mk_id(id=nil)
+    return id ? %Q( id="#{id}") : nil
+  end
+
+  def self.mk_klass(klass=nil)
+    return klass ? %Q( class="#{klass}") : nil
+  end
+
+end
+
+
+class Helper
+  def initialize(site, section, page)
+    @site = site
+    @page = page
+    @section = section
   end
 
   # Return the full title for a given page, constructed from the site title,
@@ -54,20 +70,22 @@ class Helper
   end
 
   # Return a linked trail from the site root for the current page
-  def trail(seperator=' > ')
+  def trail(seperator=' > ', show_current: true)
     trail = []
     @page.trail.descend do |a|
       trail << a
     end
     last = @site.addr(trail.pop).title
     trail.map! {|a| @site.section(a).link_to(klass: "aw-trail-section") }
-    trail << self.span(last, klass: "aw-trail-page")
-    seperator = self.span(seperator, klass: "aw-trail-seperator")
+    if show_current
+      trail << HTML.span(last, klass: "aw-trail-page")
+    end
+    seperator = HTML.span(seperator, klass: "aw-trail-seperator")
     trail = trail.join(seperator)
-    return self.span(trail, klass: "aw-trail")
+    return HTML.span(trail, klass: "aw-trail")
   end
 
-  def list_pages(section: false, span: true, linked: true, hide_current: false)
+  def list_pages(section: false, span: true, linked: true, hide_current: false, exclude_index: true)
     if section
       section = @site.section(section)
     else
@@ -75,19 +93,19 @@ class Helper
     end
     list = []
     section.pages.each do |p|
-      unless p == @page && hide_current
+      unless (p == @page && hide_current) || (exclude_index && p.path.name == 'index')
         if linked && p != @page
           list << p.link_to(klass: "aw-page-list-link")
         else
-          list << self.span(p.title, klass: "aw-page-list-title")
+          list << HTML.span(p.title, klass: "aw-page-list-title")
         end
       end
     end
     if span
       list = list.join(' ')
-      return self.span(list, klass: "aw-page-list")
+      return HTML.span(list, klass: "aw-page-list")
     else
-      return self.list(list, klass: "aw-page-list")
+      return HTML.list(list, klass: "aw-page-list")
     end
   end
 end

@@ -10,8 +10,10 @@ class Section
     @path = Path.new(@site, input_path, :root, relative: true)
 
     # Get all pages in this section
-    @pages = @path.input.glob(Site::Types[:pages]).map do |p|
-      Page.new(@site, p, self)
+    @pages = {}
+    @path.input.glob(Site::Types[:pages]).each do |p|
+      p = Page.new(@site, p, self)
+      @pages[p.path.name] = p
     end
 
     if self.root?
@@ -35,9 +37,9 @@ class Section
     end
 
     # Order pages by ctime and give them an index
-    @ordered_pages = @pages.sort {|a,b| a <=> b }
-    @ordered_pages.each_with_index do |page,i|
-      page.index = i + 1
+    @ordered_pages = Hash[@pages.sort {|p1,p2| p1.last <=> p2.last }]
+    @ordered_pages.each_with_index do |pair,i|
+      pair.last.index = i + 1
     end
 
     @title = self.conf(:title)
@@ -58,6 +60,25 @@ class Section
     return @conf[key]
   end
 
+  def pages
+    return @pages.values
+  end
+
+  def page(name)
+    unless self.has_page?(name)
+      raise ArgumentError, "Section #{self} has no page named '#{name}'"
+    end
+    @pages[name]
+  end
+
+  def has_page?(name)
+    @pages.has_key?(name)
+  end
+
+  def has_index?
+    return self.has_page?('index') || self.conf(:autoindex)
+  end
+
   def root?
     return @path.link == Pathname.new('/')
   end
@@ -66,13 +87,13 @@ class Section
     return @pages.length
   end
 
-  def link_to(**options)
-    text  = options[:text]  || @title
-    id    = options[:id]    || nil
-    klass = options[:klass] || nil
-    id    = %Q( id="#{id}")       if id
-    klass = %Q( class="#{klass}") if klass
-    return %Q(<a#{id}#{klass} href="#{@path.link}">#{text}</a>)
+  def link_to(**args)
+    if self.has_index?
+      args[:text] ||= @title
+      return HTML.link_to(self, **args)
+    else
+      return HTML.span(@title)
+    end
   end
 
   def inspect

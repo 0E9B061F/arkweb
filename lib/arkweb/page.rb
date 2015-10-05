@@ -83,25 +83,17 @@ class Page
     return @erb
   end
 
-  def link_to(text: @title, id: nil, klass: nil, index: nil)
-    id    = %Q( id="#{id}")       if id
-    klass = %Q( class="#{klass}") if klass
-
-    if index
-      link = @path.paginated_link(index)
-    else
-      link = @path.link
-    end
-
-    return %Q(<a#{id}#{klass} href="#{link}">#{text}</a>)
+  def link_to(**args)
+    args[:text] ||= @title
+    return HTML.link_to(self, **args)
   end
 
   def to_s
-    return @path.link
+    return @path.input_relative.to_s
   end
 
   def inspect
-    return "#<AW::Page:#{self}>"
+    return %Q(#<AW::Page:"#{self}">)
   end
 
   def <=>(b)
@@ -142,7 +134,7 @@ class Collection
   end
 
   def inspect
-    return "#<AW::Collection:#{@page.collect.join(",")}>"
+    return "#<AW::Collection:[#{@page.collect.join(",")}]>"
   end
 end
 
