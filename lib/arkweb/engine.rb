@@ -154,15 +154,15 @@ class Engine
 
   def write_pages
     @site.pages.each do |page|
-      msg "Processing page: #{page.path.basename}"
+      msg "Processing page: #{page.path.link}"
 
       # Make sure the appropriate subdirectories exist in the output folder
       FileUtils.mkdir_p(page.path.output.dirname)
 
-      if !page.collect.empty? && page.pagesize
+      if page.paginate
         if page.path.changed? || page.collect.any? {|s| @changed_sections.member?(s) }
-          pages = page.collect.map {|a| @site.section(a).pages }.flatten.sort {|a,b| a <=> b }
-          collection = Collection.new(page, pages, page.pagesize)
+          pages = page.collect.map {|a| @site.section(a).members }.flatten.sort {|a,b| a <=> b }
+          collection = Collection.new(page, pages, page.paginate)
           collection.range.each do |index|
             data = self.render_page(page, index, collection)
             page.path.paginated_output(index).write(data)

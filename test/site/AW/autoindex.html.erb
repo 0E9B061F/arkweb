@@ -1,0 +1,11 @@
+---
+pagesize: 5
+---
+
+<% @collection.paginate(@index).each do |page| %>
+  <span><%= page.link_to %></span>
+<% end %>
+<br/>
+<br/>
+<span>Go to page: <%= @collection.links(@index) %></span>
+

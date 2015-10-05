@@ -1,24 +1,29 @@
 ---
 collect: [/articles, /posts, /posts/scratch]
-pagesize: 4
+paginate: 4
 ---
 
 <table class="table-half">
 <caption>General</caption>
 
 <tr>
-	<th>Site title:</th>
+	<th>Site title</th>
 	<td><%= @site.conf(:title) %></tr>
 </tr>
 
 <tr>
-	<th>Page count:</th>
+	<th>Page count</th>
 	<td class="code"><%= @site.pages.length %></td>
 </tr>
 
 <tr>
-  <th>Sections:</th>
+  <th>Sections</th>
 	<td class="code"><%= @site.sections.length %></td>
+</tr>
+
+<tr>
+  <th>Rendered at</th>
+	<td class="code"><%= Time.now.strftime("%l:%M%P  %b. %-d, '%y") %></td>
 </tr>
 
 </table>
@@ -30,7 +35,7 @@ pagesize: 4
   <% @site.sections.each do |sec| %>
     <tr>
       <th><%= sec.link_to %></th>
-      <td class="code"><%= sec.pages.length %> pages</td>
+      <td class="code"><%= sec.members.length %> pages</td>
     </tr>
   <% end %>
   </tbody>

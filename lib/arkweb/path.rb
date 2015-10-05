@@ -6,6 +6,7 @@ class Path
   def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil)
     @site = site
     @input = input_path
+    @is_relative = relative
 
     if self.root?
       @basename = '/'
@@ -15,7 +16,7 @@ class Path
       @name = @basename[/^[^\.]+/]
     end
 
-    @output_dir = @site.out(output_root)
+    @output_dir = output_root
 
     @input_relative = @input.relative_path_from(@site.root)
 
@@ -61,12 +62,17 @@ class Path
     else
       index = "-#{index}"
     end
-    return "#{@name}#{index}"
+    return "#{@output_name}#{index}"
   end
 
   def paginated_output(index)
     name = self.paginated_name(index)
-    return @output_dir + @relative + "#{name}#{@output_ext}"
+    name = "#{name}#{@output_ext}"
+    @output = if @is_relative
+      @output_dir.join(@relative).join(name)
+    else
+      @output_dir.join(name)
+    end
   end
 
   def paginated_link(index)

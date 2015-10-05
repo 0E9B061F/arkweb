@@ -1,10 +1,16 @@
 module ARKWEB
 
 class Page
-  def initialize(site, input_path, section)
+  def initialize(site, input_path, section, autoindex: false)
     @site    = site
     @section = section
-    @path    = Path.new(@site, input_path, :root, output_ext: 'html', relative: true)
+    @autoindex = autoindex
+
+    if @autoindex
+      @path = Path.new(@site, input_path, @section.path.output, output_ext: 'html', output_name: 'index')
+    else
+      @path = Path.new(@site, input_path, @site.out(:root), output_ext: 'html', relative: true)
+    end
 
     @index = 0
 
@@ -29,24 +35,31 @@ class Page
       header = {}
     end
 
+    if self.index?
+      p @section.title
+      title = "#{@section.title} Index"
+    else
+      title = @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
+    end
+
     @conf = {
-      :title => @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join,
+      :title => title,
       :desc => false,
       :keywords => [],
-      :collect => [],
-      :pagesize => false
+      :collect => [@section.path.link],
+      :paginate => false
     }
+    @conf[:paginate] = 5 if autoindex
     unless header.empty?
       header = Hash[header.map {|k,v| [k.to_sym, v] }]
       @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
     end
     @conf[:collect] = [@conf[:collect]].flatten.map(&:to_s)
-    @conf[:pagesize] = @conf[:pagesize].to_i if @conf[:pagesize]
 
     @title = self.conf(:title)
     @desc = self.conf(:desc) || ''
     @collect = self.conf(:collect)
-    @pagesize = self.conf(:pagesize) ? self.conf(:pagesize).to_i : false
+    @paginate = self.conf(:paginate) ? self.conf(:paginate).to_i : false
   end
   attr_reader :site
   attr_reader :path
@@ -55,7 +68,7 @@ class Page
   attr_reader :title
   attr_reader :contents
   attr_reader :collect
-  attr_reader :pagesize
+  attr_reader :paginate
   attr_reader :desc
   attr_accessor :index
 
@@ -68,7 +81,7 @@ class Page
   end
 
   def index?
-    return @path.name == 'index'
+    return @path.name == 'index' || @autoindex
   end
 
   def trail

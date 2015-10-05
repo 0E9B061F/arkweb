@@ -7,9 +7,9 @@
   <h1>AW Test Site</h1>
   <h3>As rendered by: <span class="version"><%= @site.app.identity %></span></h3>
   <br/>
-  <h2>Location: <%= @section.root? ? @helper.trail : @helper.trail(show_current: false) %></h2>
+  <h2>Location: <%= @page.index? ? @helper.trail : @helper.trail(show_current: false) %></h2>
   <br/>
-  <% unless @section.root? %>
+  <% unless @page.index? %>
     <%= @helper.list_pages %>
   <% end %>
 </div>

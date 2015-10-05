@@ -29,6 +29,7 @@ class Site
     @input[:header]       = @input[:arkweb].join('header.yaml')
     @input[:page_erb]     = @input[:arkweb].join('page.html.erb')
     @input[:site_erb]     = @input[:arkweb].join('site.html.erb')
+    @input[:autoindex]    = @input[:arkweb].join('autoindex.html.erb')
     @input[:style]        = @input[:arkweb].join('site.{css,sass,scss}')
     @input[:images]       = @input[:arkweb].join('images')
     @input[:hooks]        = @input[:arkweb].join('hook')
@@ -88,10 +89,17 @@ class Site
     else
       @site_template = @app.root('templates/site.html.erb')
     end
+
     if @input[:page_erb].exist?
       @page_template = @input[:page_erb]
     else
       @page_template = false
+    end
+
+    if @input[:autoindex].exist?
+      @autoindex = @input[:autoindex]
+    else
+      @autoindex = @app.root('templates/autoindex.html.erb')
     end
 
     # Collect paths to each hook
@@ -195,6 +203,7 @@ class Site
   attr_reader :favicon
   attr_reader :site_template
   attr_reader :page_template
+  attr_reader :autoindex
   attr_reader :path_cache_file
   attr_reader :path_cache
   attr_reader :old_path_cache

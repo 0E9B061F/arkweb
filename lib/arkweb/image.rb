@@ -7,9 +7,9 @@ class Image
     @section = section
 
     if self.site_style?
-      @path = Path.new(@site, input_path, :images)
+      @path = Path.new(@site, input_path, @site.out(:images))
     else
-      @path = Path.new(@site, input_path, :root, relative: true)
+      @path = Path.new(@site, input_path, @site.out(:root), relative: true)
     end
 
     @name = @path.name

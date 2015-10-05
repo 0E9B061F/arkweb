@@ -93,7 +93,7 @@ class Helper
     end
     list = []
     section.pages.each do |p|
-      unless (p == @page && hide_current) || (exclude_index && p.path.name == 'index')
+      unless (p == @page && hide_current) || (exclude_index && p.index?)
         if linked && p != @page
           list << p.link_to(klass: "aw-page-list-link")
         else
