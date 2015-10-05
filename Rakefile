@@ -6,7 +6,7 @@ require 'fileutils'
 require 'erb'
 require 'digest'
 
-require 'ark/utility'
+require 'ark/util'
 
 
 class Helper
@@ -15,8 +15,8 @@ class Helper
 
   def initialize
     @home = Dir.pwd
-    @version = Ark::Git.version
-    @identity = Ark::Git.version_line(project: Project)
+    @version = ARK::Git.version
+    @identity = ARK::Git.version_line(project: Project)
     @freeze = 'freeze.yaml'
   end
 
@@ -112,6 +112,7 @@ task :console do
   require 'irb'
   require 'irb/completion'
   require_relative 'lib/arkweb'
+  S = AW::Site.new('test/site')
   ARGV.clear
   IRB.start
 end
