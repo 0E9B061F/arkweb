@@ -2,10 +2,16 @@
 pagesize: 5
 ---
 
+<% if @section.desc %>
+  <p><%= @section.desc %></p>
+<% end %>
+
+<p>
 <% @collection.paginate(@index).each do |page| %>
   <span><%= page.link_to %></span>
 <% end %>
 <br/>
 <br/>
 <span>Go to page: <%= @collection.links(@index) %></span>
+</p>
 
