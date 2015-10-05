@@ -1,0 +1,5 @@
+
+= Wiki Markup Test Page =
+
+This page is ''marked-up'' in a '''MediaWiki-like''' syntax.
+

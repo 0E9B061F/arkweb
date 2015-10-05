@@ -29,7 +29,7 @@ pagesize: 4
   <tbody>
   <% @site.sections.each do |sec| %>
     <tr>
-      <th><%= sec.conf(:title) %></th>
+      <th><%= sec.link_to %></th>
       <td class="code"><%= sec.pages.length %> pages</td>
     </tr>
   <% end %>

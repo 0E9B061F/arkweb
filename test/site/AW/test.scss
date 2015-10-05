@@ -1,6 +1,6 @@
 $white: #fefeff;
 
-$mono: "Consolas", monospace;
+$mono: "DejaVu Sans Mono", "Consolas", monospace;
 $sans: "Open Sans", "Ubuntu", sans;
 
 body {
@@ -32,14 +32,18 @@ body {
   }
 }
 
+h1,h2,h3,h4,h5,h6 {
+  font-family: "Consolas", monospace;
+}
+
 .version {
 }
 
 .content {
 }
 
-p {
-  font-size: 2em;
+p, pre {
+  margin-left: 1em;
 }
 
 table {
