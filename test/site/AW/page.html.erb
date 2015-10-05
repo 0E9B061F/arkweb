@@ -1,10 +1,16 @@
 <div class="page">
 
 <div class="header">
+  <%= @helper.list_pages(section: '/') %>
+  <br/>
   <h1>AW Test Site</h1>
   <h3>As rendered by: <span class="version"><%= @site.app.identity %></span></h3>
   <br/>
-  <h2>Location: <%= @helper.trail %></h2>
+  <h2>Location: <%= @section.root? ? @helper.trail : @helper.trail(show_current: false) %></h2>
+  <br/>
+  <% unless @section.root? %>
+    <%= @helper.list_pages %>
+  <% end %>
 </div>
 
 <div class="content">

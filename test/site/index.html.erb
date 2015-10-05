@@ -75,8 +75,8 @@ pagesize: 4
 <h2>Pagination:</h2>
 
 <% @collection.paginate(@index).each do |page| %>
-  <p><%= page.title %></p>
+  <span><%= page.link_to %></span>
 <% end %>
-
-<%= @collection.links(@index) %>
+<br/>
+<span>Go to page: <%= @collection.links(@index) %></span>
 </div>

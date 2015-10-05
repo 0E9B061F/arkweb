@@ -50,6 +50,15 @@ table {
   width: 512px;
 }
 
+a {
+  text-decoration: none;
+  background-color: #F4F4DF;
+  color: #191919;
+}
+a:visited {
+  color: #454545;
+}
+
 tr {
   margin: 0;
 }
@@ -74,6 +83,9 @@ th {
 
 .pagination-example {
   clear: left;
+  margin-top: 1em;
+  padding-top: 1em;
+  border-top: 2px solid #454545;
 }
 
 .code {

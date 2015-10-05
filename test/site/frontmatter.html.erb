@@ -1,8 +1,9 @@
 ---
-title: This Page Contains YAML Front-matter
-tags: [YAML, example, testing]
+title: Frontmatter Test
+desc: This page contains frontmatter for testing.
+keywords: [YAML, example, testing]
 ---
 
-<h1>This Page Contains Front Matter</h1>
-<p>Really, it does</p>
+<h3>Front Matter Testing</h3>
+<p><%= @page.conf(:desc) %></p>
 
