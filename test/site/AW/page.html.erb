@@ -10,7 +10,7 @@
   <h2>Location: <%= @page.index? || @section.root? ? @helper.trail : @helper.trail(show_current: false) %></h2>
   <br/>
   <% unless @page.index? || @section.root? %>
-    <%= @helper.list_pages %>
+    <%= @helper.list_pages(limit: 5) %>
   <% end %>
 </div>
 

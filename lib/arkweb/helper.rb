@@ -93,14 +93,17 @@ class Helper
     return HTML.span(trail, klass: "aw-trail")
   end
 
-  def list_pages(section: false, span: true, linked: true, hide_current: false, exclude_index: true)
+  def list_pages(section: false, span: true, linked: true, hide_current: false, exclude_index: true, sort: :date, ascending: true, limit: false, ellipsis: true)
     if section
       section = @site.section(section)
     else
       section = @section
     end
     list = []
-    section.pages.each do |p|
+    pages = section.pages.sort {|pa,pb| pa.send(sort) <=> pb.send(sort) }
+    pages.reverse! unless ascending
+    pages = pages.take(limit) if limit
+    pages.each do |p|
       unless (p == @page && hide_current) || (exclude_index && p.index?)
         if linked && p != @page
           list << p.link_to(klass: "aw-page-list-link")
@@ -108,6 +111,9 @@ class Helper
           list << HTML.span(p.title, klass: "aw-page-list-title")
         end
       end
+    end
+    if pages.length < section.pages.length
+      list << section.link_to(text: '...')
     end
     if span
       list = list.join(' ')
