@@ -32,10 +32,6 @@ specified in the frontmatter (`apply_to: pagename.md`), or the heritable
 attribute might be given in frontmatter (`apply_to: heritable` or
 `heritable: true`)
 
-clobbering the output directory should fall back on erasing all files underneath
-the output dir if the output dir cannot be deleted (ie, the user has no rights
-to)
-
 include feature should support full rendering for whatever files will be
 included, but only if the user requests it - this way normal ARKWEB-style pages
 can be included and rendered, but complete HTML files from other sources can
@@ -44,8 +40,6 @@ also be included without getting wrapped in a template.
 apple icon support, windows tile support
 
 when in watch mode, disable message times
-
-linked trail method on helper
 
 move the various helper methods found on Site to Helper
 
@@ -56,4 +50,8 @@ builtin support for a development server
 ark serve
 ark unserve
 
+smart rendering: make sure autoindices are re-rendered when their collected
+pages change
+
+fix version information bug
 
