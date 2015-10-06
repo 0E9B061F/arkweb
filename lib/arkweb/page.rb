@@ -47,7 +47,9 @@ class Page
       :desc => false,
       :keywords => [],
       :collect => [@section.path.link],
-      :paginate => false
+      :paginate => false,
+      :index => false,
+      :date => false
     }
     @conf[:paginate] = 5 if autoindex
     unless header.empty?
@@ -60,6 +62,14 @@ class Page
     @desc = self.conf(:desc) || ''
     @collect = self.conf(:collect)
     @paginate = self.conf(:paginate) ? self.conf(:paginate).to_i : false
+
+    @user_index = self.conf(:index) || -1
+
+    @date = if self.conf(:date)
+      @date = Time.parse(self.conf(:date))
+    else
+      @date = @path.input.ctime
+    end
   end
   attr_reader :site
   attr_reader :path
@@ -70,6 +80,8 @@ class Page
   attr_reader :collect
   attr_reader :paginate
   attr_reader :desc
+  attr_reader :date
+  attr_reader :user_index
   attr_accessor :index
 
   def conf(key)
@@ -110,7 +122,7 @@ class Page
   end
 
   def <=>(b)
-    @path.input.ctime <=> b.path.input.ctime
+    @date <=> b.date
   end
 end
 
@@ -127,11 +139,13 @@ class Collection
   attr_reader :range
   attr_reader :pagecount
 
-  def paginate(index)
+  def paginate(index, sort: :date, ascending: true)
     index = index - 1
     first = index * @pagesize
     last  = first + (@pagesize - 1)
-    @pages[first..last]
+    pages = @pages.sort {|pa,pb| pa.send(sort) <=> pb.send(sort) }
+    pages.reverse! unless ascending
+    pages[first..last]
   end
 
   def links(index)

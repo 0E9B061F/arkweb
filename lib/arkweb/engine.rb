@@ -161,7 +161,7 @@ class Engine
 
       if page.paginate
         if page.path.changed? || page.collect.any? {|s| @changed_sections.member?(s) }
-          pages = page.collect.map {|a| @site.section(a).members }.flatten.sort {|a,b| a <=> b }
+          pages = page.collect.map {|a| @site.section(a).members }.flatten
           collection = Collection.new(page, pages, page.paginate)
           collection.range.each do |index|
             data = self.render_page(page, index, collection)
