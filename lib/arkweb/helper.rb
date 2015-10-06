@@ -11,7 +11,11 @@ class HTML
     if index
       link = object.path.paginated_link(index)
     else
-      link = object.path.link
+      if object.is_a?(Page) && object.index?
+        link = object.section.path.link
+      else
+        link = object.path.link
+      end
     end
 
     return %Q(<a#{id}#{klass} href="#{link}">#{text}</a>)
