@@ -55,3 +55,19 @@ pages change
 
 fix version information bug
 
+allow markdown in frontmatter `desc:' fields
+
+regarding snippets: barring dependancy cycle checks, allow for snippets to be
+taken from pages without an ERB pass (since these can't contain content from
+other pages). the #snippet method would fall back on #desc for pages with ERB
+passes.
+
+directory-pages will have assets, in the form of any images, css or javascript
+alongside the index.x.y, which will be accessible on the page object.
+consequently, any such files found in a section will be available to the
+section's index as its own assets. by default, styles and scripts will be linked
+automatically. heritibility of assets will be controlled with frontmatter on
+those assets, and only applies to section-assets. heritable assets will be
+accessible on child-pages and child-sections as if those assets existed in every
+child page.
+
