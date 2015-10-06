@@ -55,7 +55,8 @@ pages change
 
 fix version information bug
 
-allow markdown in frontmatter `desc:' fields
+allow markdown in frontmatter `desc:' fields, since these will be used as
+snippets and in autoindices as content.
 
 regarding snippets: barring dependancy cycle checks, allow for snippets to be
 taken from pages without an ERB pass (since these can't contain content from
