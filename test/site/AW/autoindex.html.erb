@@ -8,7 +8,10 @@ pagesize: 5
 
 <p>
 <% @collection.paginate(@index).each do |page| %>
-  <span><%= page.link_to %></span>
+  <h3><%= page.link_to %></h3>
+  <% if page.desc %>
+    <p><%= page.desc %></p>
+  <% end %>
 <% end %>
 <br/>
 <br/>
