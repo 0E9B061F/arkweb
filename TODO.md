@@ -72,3 +72,5 @@ those assets, and only applies to section-assets. heritable assets will be
 accessible on child-pages and child-sections as if those assets existed in every
 child page.
 
+support for pages written as plain text without any markup, i.e., `.txt` files
+
