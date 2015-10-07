@@ -1,9 +1,7 @@
 module ARKWEB
 
 class Path
-  # output dir should always be out(;render), hard set relative can be used to
-  # give other dirs below this
-  def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil)
+  def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil, nest: false)
     @site = site
     @input = input_path
     @is_relative = relative
@@ -30,17 +28,29 @@ class Path
     end
     @output_fullname = "#{@output_name}#{@output_ext}"
 
-    @output = if relative
-      @output_dir.join(@relative).join(@output_fullname)
+    if nest
+      @output = if relative
+        @output_dir.join(@relative).join(@name).join(@output_fullname)
+      else
+        @output_dir.join(@name).join(@output_fullname)
+      end
     else
-      @output_dir.join(@output_fullname)
+      @output = if relative
+        @output_dir.join(@relative).join(@output_fullname)
+      else
+        @output_dir.join(@output_fullname)
+      end
     end
 
     root = Pathname.new('/')
     if self.root?
       @link = root
     else
-      address = @output.relative_path_from(@site.out(:root))
+      address = if nest
+        @output.dirname.relative_path_from(@site.out(:root))
+      else
+        @output.relative_path_from(@site.out(:root))
+      end
       @link = root.join(address)
     end
   end

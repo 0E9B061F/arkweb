@@ -9,7 +9,7 @@ class Page
     if @autoindex
       @path = Path.new(@site, input_path, @section.path.output, output_ext: 'html', output_name: 'index')
     else
-      @path = Path.new(@site, input_path, @site.out(:root), output_ext: 'html', relative: true)
+      @path = Path.new(@site, input_path, @site.out(:root), output_name: 'index', output_ext: 'html', relative: true, nest: true)
     end
 
     @index = 0
@@ -98,7 +98,7 @@ class Page
 
   def trail
     if index?
-      return @path.link.dirname
+      return @section.path.link
     else
       return @path.link
     end
