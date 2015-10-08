@@ -61,12 +61,11 @@ class Helper
   # section title and individual page title. Titles will be joined by
   # `seperator`
   def full_title(seperator=' - ')
-    if @page.index?
-      titles = [@site.title, @section.title]
-    else
-      titles = [@site.title, @section.title, @page.title]
-    end
-    titles.join(seperator)
+    titles = []
+    titles << @site.title
+    titles << @section.title unless @section.root?
+    titles << @page.title unless @page.index?
+    return titles.join(seperator)
   end
 
   # Return a full description for the current page, constructed from the site
