@@ -133,21 +133,45 @@ class Engine
     unless @site.images.empty?
       FileUtils.mkdir_p(@site.out(:images))
       dbg "Copying images: #{@site.in(:images)} -> #{@site.out(:images)}"
-      FileUtils.cp_r(@site.images, @site.out(:images))
+      @site.images.each do |image|
+        FileUtils.cp_r(image.path.input, image.path.output)
+      end
+    end
+    @site.pages.each do |page|
+      page.images.each do |image|
+        FileUtils.cp_r(image.path.input, image.path.output)
+      end
+    end
+  end
+
+  def copy_scripts
+    @site.pages.each do |page|
+      page.scripts.each do |script|
+        FileUtils.cp_r(script.path.input, script.path.output)
+      end
+    end
+  end
+
+  def render_style(style)
+    FileUtils.mkdir_p(style.path.output.dirname)
+    if style.is_css?
+      FileUtils.cp(style.path.input, style.path.output)
+    else
+      # Only render if output doesn't already exist, or if output is outdated
+      if style.path.changed?
+        dbg "Rendering SASS file '#{style}' to '#{style.path.output}'"
+        `sass -t compressed #{style.path.input} #{style.path.output}`
+      end
     end
   end
 
   def render_styles
     @site.styles.each do |name, style|
-      FileUtils.mkdir_p(style.path.output.dirname)
-      if style.is_css?
-        FileUtils.cp(style.path.input, style.path.output)
-      else
-        # Only render if output doesn't already exist, or if output is outdated
-        if style.path.changed?
-          dbg "Rendering SASS file '#{style}' to '#{style.path.output}'"
-          `sass -t compressed #{style.path.input} #{style.path.output}`
-        end
+      self.render_style(style)
+    end
+    @site.pages.each do |page|
+      page.styles.each do |style|
+        self.render_style(style)
       end
     end
   end
@@ -352,6 +376,7 @@ class Engine
     self.generate_favicons
     self.render_styles
     self.copy_images
+    self.copy_scripts
     self.copy_inclusions
     self.minify
     self.validate

@@ -1,13 +1,13 @@
 module ARKWEB
 
-class Image
+class Script
   def initialize(site, input_path, page=nil)
     # Relations
     @site = site
     @page = page
 
-    if self.site_image?
-      @path = Path.new(@site, input_path, @site.out(:images))
+    if self.site_script?
+      @path = Path.new(@site, input_path, @site.out(:scripts))
     else
       @path = Path.new(@site, input_path, @site.out(:root), relative: true)
     end
@@ -20,8 +20,12 @@ class Image
 
   # True if this image is found in the ARKWEB directory. False if located
   # in the site structure.
-  def site_image?
+  def site_script?
     return @page.nil?
+  end
+
+  def head_link
+    return %Q(<script src="#{@path.link}"></script>)
   end
 
   # Represent this object as the working path to the given stylesheet
@@ -30,7 +34,7 @@ class Image
   end
 
   def inspect
-    return "#<AW::Image:#{@path.link}>"
+    return "#<AW::Script:#{@path.link}>"
   end
 end
 

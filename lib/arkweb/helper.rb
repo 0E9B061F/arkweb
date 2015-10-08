@@ -121,6 +121,59 @@ class Helper
       return HTML.list(list, klass: "aw-page-list")
     end
   end
+
+  def link_styles
+    site_styles = @site.styles.map {|n,s| s.head_link }
+    page_styles = @page.styles.map {|s| s.head_link }
+    styles = site_styles + page_styles
+    return styles.join("\n")
+  end
+
+  def link_scripts
+    page_scripts = @page.scripts.map {|s| s.head_link }
+    return page_scripts.join("\n")
+  end
+
+  def link_google_fonts
+    if @site.conf(:google_fonts)
+      fonts = @site.conf(:google_fonts).map {|f| f.tr(' ', '+') }.join('|')
+      url = "https://fonts.googleapis.com/css?family=#{fonts}"
+      return %Q(<link href="#{url}" rel="stylesheet" type="text/css" />)
+    end
+  end
+
+  def link_favicons
+    if !@site.favicon.nil?
+      links = []
+      @site.favicon.formats.each do |format|
+        unless format.format == 'ico'
+          links << %Q(<link rel="icon" type="image/#{format.format}" sizes="#{format.resolution}" href="#{format.path.link}">)
+        end
+      end
+      return links.join("\n")
+    end
+  end
+
+  def insert_analytics
+    if @site.conf(:analytics_key)
+      return <<-JAVASCRIPT
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', '#{@site.conf(:analytics_key)}', 'auto');
+        ga('send', 'pageview');
+      </script>
+      JAVASCRIPT
+    end
+  end
+
+  def meta(name, content)
+    if name && content
+      return %Q(<meta name="#{name}" content="#{content}" />)
+    end
+  end
 end
 
 end # module ARKWEB

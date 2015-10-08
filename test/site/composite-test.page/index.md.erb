@@ -1,0 +1,6 @@
+This is a composite page; a marked-up text file and zero-or-more assets.
+Composite pages are directories ending in `.page` and having an index.x.[erb] in
+them. All other directories are treated as sections.
+
+<img src="<%= @page.image('image-asset.png').path.link %>"/>
+

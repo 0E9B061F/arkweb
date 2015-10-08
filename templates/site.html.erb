@@ -10,17 +10,19 @@
 
     <title><%= @helper.full_title %></title>
 
-    <%= @site.meta 'author',      @site.conf(:author) %>
-    <%= @site.meta 'description', @helper.full_description %>
-    <%= @site.meta 'keywords',    @site.conf(:keywords) %>
-    <%= @site.meta 'generator',   @site.app.identity %>
+    <%= @helper.meta 'author',      @site.conf(:author) %>
+    <%= @helper.meta 'description', @helper.full_description %>
+    <%= @helper.meta 'keywords',    @site.conf(:keywords) %>
+    <%= @helper.meta 'generator',   @site.app.identity %>
 
-    <%= @site.link_favicons %>
+    <%= @helper.link_favicons %>
 
-    <%= @site.link_styles %>
-    <%= @site.link_google_fonts %>
+    <%= @helper.link_styles %>
+    <%= @helper.link_google_fonts %>
 
-    <%= @site.insert_analytics %>
+    <%= @helper.insert_analytics %>
+
+    <%= @helper.link_scripts %>
   </head>
 
   <body>

@@ -4,10 +4,10 @@ module ARKWEB
 # stylesheet may be a site-wide style found in the ARKWEB directory, or a
 # section-specific style found in the site structure.
 class Stylesheet
-  def initialize(site, input_path, section=nil)
+  def initialize(site, input_path, page=nil)
     # Relations
-    @site    = site
-    @section = section
+    @site = site
+    @page = page
 
     if self.site_style?
       @path = Path.new(@site, input_path, @site.out(:aw), output_ext: 'css')
@@ -24,7 +24,7 @@ class Stylesheet
   # True if this stylesheet is found in the ARKWEB directory. False if located
   # in the site structure.
   def site_style?
-    return @section.nil?
+    return @page.nil?
   end
 
   # Return true if this stylesheet is in SASS

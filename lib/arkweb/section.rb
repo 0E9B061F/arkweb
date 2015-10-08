@@ -32,9 +32,15 @@ class Section
     @title = self.conf(:title)
     @desc = self.conf(:desc) || ''
 
-    # Get all pages in this section
+    # Get all single-file pages in this section
     @pages = {}
     @path.input.glob(Site::Types[:pages]).each do |path|
+      page = Page.new(@site, path, self)
+      @pages[page.path.name] = page
+    end
+
+    # Get all composite pages in this section
+    @path.input.glob('*.page/').each do |path|
       page = Page.new(@site, path, self)
       @pages[page.path.name] = page
     end

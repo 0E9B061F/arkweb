@@ -9,6 +9,7 @@ class Site
   Types = {
     :pages    => "*.{erb,md,html,wiki}",
     :images   => "*.{jpg,jpeg,png,gif}",
+    :script   => "*.js",
     :style    => "*.{css,scss,sass}",
     :sass     => "*.{scss,sass}",
     :css      => "*.css",
@@ -32,6 +33,7 @@ class Site
     @input[:autoindex]    = @input[:arkweb].join('autoindex.html.erb')
     @input[:style]        = @input[:arkweb].join('site.{css,sass,scss}')
     @input[:images]       = @input[:arkweb].join('images')
+    @input[:scripts]      = @input[:arkweb].join('scripts')
     @input[:hooks]        = @input[:arkweb].join('hook')
     @input[:before_hooks] = @input[:hooks].join('before')
     @input[:after_hooks]  = @input[:hooks].join('after')
@@ -81,6 +83,7 @@ class Site
     @output[:root]     = @conf[:output] || @input[:arkweb].join('output')
     @output[:aw]       = @output[:root].join(OutputARKWEB)
     @output[:images]   = @output[:aw].join('images')
+    @output[:scripts]  = @output[:aw].join('scripts')
     @output[:favicons] = @output[:aw].join('favicons')
 
     # Decide what templates we'll be using
@@ -141,7 +144,7 @@ class Site
     end
    
     # Get all images in the image dir
-    @images = @input[:images].glob(Types[:images])
+    @images = @input[:images].glob(Types[:images]).map {|p| Image.new(self, p) }
 
     # Get all stylesheets in the AW dir
     sheets = @input[:arkweb].glob(Types[:style])
@@ -158,7 +161,7 @@ class Site
     subdirs = []
     @root.find do |path|
       if path.directory?
-        if path == @input[:arkweb] || path.basename.to_s[/^\./]
+        if path == @input[:arkweb] || path.basename.to_s[/^\./] || path.basename.to_s[/\.page$/]
           Find.prune
         else
           subdirs << path
@@ -302,50 +305,6 @@ class Site
     return %Q(<img#{id}#{klass}#{alt} src="#{link}" />)
   end
 
-  def link_styles
-    return @styles.map {|n,s| s.head_link }.join("\n")
-  end
-
-  def link_google_fonts
-    if @conf[:google_fonts]
-      fonts = @conf[:google_fonts].join('|')
-      url = "https://fonts.googleapis.com/css?family=#{fonts}"
-      return %Q(<link href="#{url}" rel="stylesheet" type="text/css" />)
-    end
-  end
-
-  def link_favicons
-    if !@favicon.nil?
-      links = []
-      @favicon.formats.each do |format|
-        unless format.format == 'ico'
-          links << %Q(<link rel="icon" type="image/#{format.format}" sizes="#{format.resolution}" href="#{format.path.link}">)
-        end
-      end
-      return links.join("\n")
-    end
-  end
-
-  def insert_analytics
-    if @conf[:analytics_key]
-      return <<-JAVASCRIPT
-      <script>
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-        ga('create', '#{@conf[:analytics_key]}', 'auto');
-        ga('send', 'pageview');
-      </script>
-      JAVASCRIPT
-    end
-  end
-
-  def meta(name, content)
-    if name && content
-      return %Q(<meta name="#{name}" content="#{content}" />)
-    end
-  end
 
 
   #

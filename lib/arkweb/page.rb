@@ -1,15 +1,42 @@
 module ARKWEB
 
 class Page
+
   def initialize(site, input_path, section, autoindex: false)
     @site    = site
     @section = section
     @autoindex = autoindex
 
+    @composite = input_path.directory? && input_path.basename.to_s[/\.page$/]
+
     if @autoindex
       @path = Path.new(@site, input_path, @section.path.output, output_ext: 'html', output_name: 'index')
+    elsif @composite
+      index = input_path.first("index#{Site::Types[:pages]}")
+      @path = Path.new(@site, index, @site.out(:root), output_name: 'index', output_ext: 'html', relative: true, composite_page: true)
     else
       @path = Path.new(@site, input_path, @site.out(:root), output_name: 'index', output_ext: 'html', relative: true, nest: true)
+    end
+
+    @name = if @composite
+      @name = @path.input.dirname.basename.to_s
+    else
+      @name = @path.name
+    end
+
+    # Get assets
+    @assets = OpenStruct.new(scripts: {}, styles: {}, images: {})
+
+    @path.input.dirname.glob(Site::Types[:script]).each do |p|
+      @assets.scripts[p.basename.to_s] = Script.new(@site, p, self)
+    end
+
+    @path.input.dirname.glob(Site::Types[:images]).each do |p|
+      @assets.images[p.basename.to_s] = Image.new(@site, p, self)
+    end
+
+    @path.input.dirname.glob(Site::Types[:style]).each do |p|
+      @assets.styles[p.basename.to_s] = Stylesheet.new(@site, p, self)
     end
 
     @index = 0
@@ -36,11 +63,19 @@ class Page
     end
 
     if self.index?
-      p @section.title
       title = "#{@section.title} Index"
     else
       title = @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
     end
+
+    #@conf = PageConf.new
+    #@conf.title = title
+    #@conf.desc = false
+    #@conf.keywords = []
+    #@conf.collect = [@section.path.link]
+    #@conf.paginate = autoindex ? 5 : false
+    #@conf.index = false
+    #@conf.date = false
 
     @conf = {
       :title => title,
@@ -75,6 +110,7 @@ class Page
   attr_reader :path
   attr_reader :section
   attr_reader :type
+  attr_reader :name
   attr_reader :title
   attr_reader :contents
   attr_reader :collect
@@ -82,6 +118,7 @@ class Page
   attr_reader :desc
   attr_reader :date
   attr_reader :user_index
+  attr_reader :assets
   attr_accessor :index
 
   def conf(key)
@@ -90,6 +127,39 @@ class Page
       raise ArgumentError "No such configuration: #{key}"
     end
     return @conf[key]
+  end
+
+  def image(name)
+    unless @assets.images.has_key?(name)
+      raise ArgumentError "No such image: #{name}"
+    end
+    return @assets.images[name]
+  end
+
+  def images
+    return @assets.images.values
+  end
+
+  def script
+    unless @assets.scripts.has_key?(name)
+      raise ArgumentError "No such script: #{name}"
+    end
+    return @assets.scripts[name]
+  end
+
+  def scripts
+    return @assets.scripts.values
+  end
+
+  def style
+    unless @assets.styles.has_key?(name)
+      raise ArgumentError "No such stylesheet: #{name}"
+    end
+    return @assets.styles[name]
+  end
+
+  def styles
+    return @assets.styles.values
   end
 
   def index?

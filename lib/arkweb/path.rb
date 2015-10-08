@@ -1,14 +1,17 @@
 module ARKWEB
 
 class Path
-  def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil, nest: false)
+  def initialize(site, input_path, output_root, relative: false, output_name: nil, output_ext: nil, nest: false, composite_page: false)
     @site = site
     @input = input_path
     @is_relative = relative
 
     if self.root?
       @basename = '/'
-      @name = '/'
+      @name = @basename
+    elsif composite_page
+      @basename = @input.basename.to_s
+      @name = @input.dirname.basename.to_s.sub(/\.page$/, '')
     else
       @basename = @input.basename.to_s
       @name = @basename[/^[^\.]+/]
@@ -20,6 +23,10 @@ class Path
 
     @relative = @input_relative.dirname
     @relative = '' if @relative.to_s == '.'
+
+    if self.composite?
+      @relative = Pathname.new(@relative.to_s.sub(/\.page$/, ''))
+    end
 
     @output_name = output_name || @name
     @output_ext = output_ext || @input.extname
@@ -46,7 +53,7 @@ class Path
     if self.root?
       @link = root
     else
-      address = if nest
+      address = if nest || composite_page
         @output.dirname.relative_path_from(@site.out(:root))
       else
         @output.relative_path_from(@site.out(:root))
@@ -103,6 +110,10 @@ class Path
 
   def root?
     return @input == @site.root
+  end
+
+  def composite?
+    @composite ||= !@input.dirname.basename.to_s[/\.page$/].nil?
   end
 
 
