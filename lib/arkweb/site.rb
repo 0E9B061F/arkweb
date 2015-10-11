@@ -26,15 +26,15 @@ class Site
 
     # Paths to special input directories and files
     @input = ClosedStruct.new
-    @input.arkweb       = @root + InputARKWEB
-    @input.header       = @input.arkweb.join('header.yaml')
-    @input.page_erb     = @input.arkweb.join('page.html.erb')
-    @input.site_erb     = @input.arkweb.join('site.html.erb')
-    @input.autoindex    = @input.arkweb.join('autoindex.html.erb')
-    @input.style        = @input.arkweb.join('site.{css,sass,scss}')
-    @input.images       = @input.arkweb.join('images')
-    @input.scripts      = @input.arkweb.join('scripts')
-    @input.hooks        = @input.arkweb.join('hook')
+    @input.aw           = @root + InputARKWEB
+    @input.header       = @input.aw.join('header.yaml')
+    @input.page_erb     = @input.aw.join('page.html.erb')
+    @input.site_erb     = @input.aw.join('site.html.erb')
+    @input.autoindex    = @input.aw.join('autoindex.html.erb')
+    @input.style        = @input.aw.join('site.{css,sass,scss}')
+    @input.images       = @input.aw.join('images')
+    @input.scripts      = @input.aw.join('scripts')
+    @input.hooks        = @input.aw.join('hook')
     @input.before_hooks = @input.hooks.join('before')
     @input.after_hooks  = @input.hooks.join('after')
     @input._finalize!
@@ -78,8 +78,8 @@ class Site
 
     # Paths to where output files will be located
     @output = ClosedStruct.new
-    @output.tmp      = @conf.tmp || @input.arkweb.join('tmp')
-    @output.root     = @conf.output || @input.arkweb.join('output')
+    @output.tmp      = @conf.tmp || @input.aw.join('tmp')
+    @output.root     = @conf.output || @input.aw.join('output')
     @output.aw       = @output.root.join(OutputARKWEB)
     @output.images   = @output.aw.join('images')
     @output.scripts  = @output.aw.join('scripts')
@@ -135,7 +135,7 @@ class Site
     end
 
     # Look for a favicon
-    favicon_path = @input.arkweb.glob(Types.icon).first
+    favicon_path = @input.aw.glob(Types.icon).first
     if favicon_path
       @favicon = Favicon.new(self, favicon_path)
       @path_cache.favicons += @favicon.formats.map {|f| f.path.link }
@@ -147,7 +147,7 @@ class Site
     @images = @input.images.glob(Types.images).map {|p| Image.new(self, p) }
 
     # Get all stylesheets in the AW dir
-    sheets = @input.arkweb.glob(Types.style)
+    sheets = @input.aw.glob(Types.style)
     @styles = {}
     sheets.each do |s|
       s = Stylesheet.new(self, s)
@@ -161,7 +161,7 @@ class Site
     subdirs = []
     @root.find do |path|
       if path.directory?
-        if path == @input.arkweb || path.basename.to_s[/^\./] || path.basename.to_s[/\.page$/]
+        if path == @input.aw || path.basename.to_s[/^\./] || path.basename.to_s[/\.page$/]
           Find.prune
         else
           subdirs << path
