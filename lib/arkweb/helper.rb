@@ -135,8 +135,8 @@ class Helper
   end
 
   def link_google_fonts
-    if @site.conf(:google_fonts)
-      fonts = @site.conf(:google_fonts).map {|f| f.tr(' ', '+') }.join('|')
+    if @site.conf.google_fonts
+      fonts = @site.conf.google_fonts.map {|f| f.tr(' ', '+') }.join('|')
       url = "https://fonts.googleapis.com/css?family=#{fonts}"
       return %Q(<link href="#{url}" rel="stylesheet" type="text/css" />)
     end
@@ -155,7 +155,7 @@ class Helper
   end
 
   def insert_analytics
-    if @site.conf(:analytics_key)
+    if @site.conf.analytics_key
       return <<-JAVASCRIPT
       <script>
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

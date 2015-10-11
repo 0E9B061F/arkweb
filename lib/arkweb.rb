@@ -11,6 +11,7 @@ require 'ark/util'
 require 'ark/cli'
 
 require_relative 'arkweb/patches'
+require_relative 'arkweb/closedstruct'
 require_relative 'arkweb/error'
 require_relative 'arkweb/application'
 require_relative 'arkweb/site'

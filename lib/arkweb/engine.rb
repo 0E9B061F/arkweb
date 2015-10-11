@@ -22,11 +22,11 @@ class Engine
   def initialize(site)
     @site = site
 
-    if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.conf.validate && ARKWEB.optional_gem('w3c_validators')
       @validator  = W3CValidators::MarkupValidator.new
     end
 
-    if @site.conf(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.conf.minify && ARKWEB.optional_gem('yui/compressor')
       @css_press  = YUI::CssCompressor.new
       @java_press = YUI::JavaScriptCompressor.new
     end
@@ -131,8 +131,8 @@ class Engine
 
   def copy_images
     unless @site.images.empty?
-      FileUtils.mkdir_p(@site.out(:images))
-      dbg "Copying images: #{@site.in(:images)} -> #{@site.out(:images)}"
+      FileUtils.mkdir_p(@site.output.images)
+      dbg "Copying images: #{@site.input.images} -> #{@site.output.images}"
       @site.images.each do |image|
         FileUtils.cp_r(image.path.input, image.path.output)
       end
@@ -208,7 +208,7 @@ class Engine
   end
 
   def validate
-    if @site.conf(:validate) && ARKWEB.optional_gem('w3c_validators')
+    if @site.conf.validate && ARKWEB.optional_gem('w3c_validators')
       @site.pages.each do |page|
         result = @validator.validate_file(page.path.output)
         if result.errors.length > 0
@@ -222,22 +222,22 @@ class Engine
   end
 
   def clobber
-    if @site.conf(:clobber)
-      dbg "Clobbering old output from: #{@site.out(:root)}"
-      @site.out(:root).rmtree if @site.out(:root).exist?
+    if @site.conf.clobber
+      dbg "Clobbering old output from: #{@site.output.root}"
+      @site.output.root.rmtree if @site.output.root.exist?
     end
   end
 
   def clean(force: false)
-    if @site.conf(:clean) || force
-      dbg "Removing temporary files: #{@site.out(:tmp)}"
-      @site.out(:tmp).rmtree if @site.out(:tmp).exist?
+    if @site.conf.clean || force
+      dbg "Removing temporary files: #{@site.output.tmp}"
+      @site.output.tmp.rmtree if @site.output.tmp.exist?
     end
   end
 
   def minify
     # XXX Don't forget to add javascript minification
-    if @site.conf(:minify) && ARKWEB.optional_gem('yui/compressor')
+    if @site.conf.minify && ARKWEB.optional_gem('yui/compressor')
       @site.styles.each do |name, style|
         begin
           dbg "Minifying stylesheet: #{style}"
@@ -289,7 +289,7 @@ class Engine
   def generate_favicons
     if !@site.favicon.nil? && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
-      FileUtils.mkdir_p(@site.out(:favicons))
+      FileUtils.mkdir_p(@site.output.favicons)
       @site.favicon.formats.each do |format|
         if format.path.changed?
           dbg "#{format.path.output.basename}: generating.", 1
@@ -306,11 +306,11 @@ class Engine
   end
 
   def deploy
-    if @site.conf(:deploy)
-      unless @site.conf(:remote)
+    if @site.conf.deploy
+      unless @site.conf.remote
         raise EngineError, "Asked to deploy but no remote was given. Specify a remote location with `--remote`"
       end
-      addr = URI(@site.conf(:remote))
+      addr = URI(@site.conf.remote)
       msg "Deploying to #{addr}"
       host = "#{addr.host}:#{addr.path}"
       if addr.scheme == 'ssh'
@@ -319,15 +319,15 @@ class Engine
         else
           port = ''
         end
-        `rsync -az --delete-before -e "ssh #{port}" #{@site.out(:root)}/ #{host}`
+        `rsync -az --delete-before -e "ssh #{port}" #{@site.output.root}/ #{host}`
       else
-        `rsync -az --delete-before #{@site.out(:root)}/ #{host}`
+        `rsync -az --delete-before #{@site.output.root}/ #{host}`
       end
     end
   end
 
   def write_path_cache
-    cache = YAML.dump(@site.path_cache)
+    cache = YAML.dump(@site.path_cache._data)
     @site.path_cache_file.write(cache)
   end
 
@@ -338,7 +338,7 @@ class Engine
         @changed_sections << page.section.path.link
       end
     end
-    @site.path_cache.each do |type,paths|
+    @site.path_cache._each do |type,paths|
       leftovers = @site.old_path_cache[type] - paths
       @cropped[type] = leftovers
       @cropped[type].each do |path|
@@ -356,7 +356,7 @@ class Engine
     return unless @site.smart_rendering
     @cropped.each do |type,paths|
       paths.each do |path|
-        path = @site.out(:root).join(path)
+        path = @site.output.root.join(path)
         if path.file?
           path.delete
         else

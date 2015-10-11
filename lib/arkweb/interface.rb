@@ -76,9 +76,9 @@ class Interface
   # directory. This is called from Interface#run
   def render
     site = Site.new(@sitepath, @conf)
-    msg "Assembling site: #{site.conf(:title)}"
+    msg "Assembling site: #{site.conf.title}"
     site.engine.write_site
-    msg "Done! Wrote site to: #{site.out(:root)}"
+    msg "Done!"
   end
 
   # Initialize a new site at the given path by copying the skeletal site

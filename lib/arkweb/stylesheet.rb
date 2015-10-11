@@ -10,9 +10,9 @@ class Stylesheet
     @page = page
 
     if self.site_style?
-      @path = Path.new(@site, input_path, @site.out(:aw), output_ext: 'css')
+      @path = Path.new(@site, input_path, @site.output.aw, output_ext: 'css')
     else
-      @path = Path.new(@site, input_path, @site.out(:root), output_ext: 'css', relative: true)
+      @path = Path.new(@site, input_path, @site.output.root, output_ext: 'css', relative: true)
     end
 
     @name = @path.name

@@ -54,9 +54,9 @@ class Path
       @link = root
     else
       address = if nest || composite_page
-        @output.dirname.relative_path_from(@site.out(:root))
+        @output.dirname.relative_path_from(@site.output.root)
       else
-        @output.relative_path_from(@site.out(:root))
+        @output.relative_path_from(@site.output.root)
       end
       @link = root.join(address)
     end
@@ -94,7 +94,7 @@ class Path
 
   def paginated_link(index)
     out = self.paginated_output(index)
-    out = out.relative_path_from(@site.out(:root))
+    out = out.relative_path_from(@site.output.root)
     return "/#{out}"
   end
 

@@ -26,7 +26,7 @@ class Favicon
     @site = site
     @input_path = input_path
     @formats = []
-    format('ico', '16x16', @site.out(:root), 'favicon')
+    format('ico', '16x16', @site.output.root, 'favicon')
     format('png', '16x16')
     format('png', '32x32')
     format('png', '96x96')
@@ -37,7 +37,7 @@ class Favicon
   private
 
   def format(ext, resolution, output_dir=nil, name=nil)
-    output_dir = output_dir || @site.out(:favicons)
+    output_dir = output_dir || @site.output.favicons
     @formats << FaviconFormat.new(@site, @input_path, output_dir, ext, resolution, name)
   end
 

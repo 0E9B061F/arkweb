@@ -7,7 +7,7 @@ class Section
 
   def initialize(site, input_path)
     @site = site
-    @path = Path.new(@site, input_path, @site.out(:root), relative: true)
+    @path = Path.new(@site, input_path, @site.output.root, relative: true)
 
     if self.root?
       title = "Home"
@@ -34,7 +34,7 @@ class Section
 
     # Get all single-file pages in this section
     @pages = {}
-    @path.input.glob(Site::Types[:pages]).each do |path|
+    @path.input.glob(Site::Types.pages).each do |path|
       page = Page.new(@site, path, self)
       @pages[page.path.name] = page
     end

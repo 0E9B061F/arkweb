@@ -12,10 +12,10 @@ class Page
     if @autoindex
       @path = Path.new(@site, input_path, @section.path.output, output_ext: 'html', output_name: 'index')
     elsif @composite
-      index = input_path.first("index#{Site::Types[:pages]}")
-      @path = Path.new(@site, index, @site.out(:root), output_name: 'index', output_ext: 'html', relative: true, composite_page: true)
+      index = input_path.first("index#{Site::Types.pages}")
+      @path = Path.new(@site, index, @site.output.root, output_name: 'index', output_ext: 'html', relative: true, composite_page: true)
     else
-      @path = Path.new(@site, input_path, @site.out(:root), output_name: 'index', output_ext: 'html', relative: true, nest: true)
+      @path = Path.new(@site, input_path, @site.output.root, output_name: 'index', output_ext: 'html', relative: true, nest: true)
     end
 
     @name = if @composite
@@ -27,15 +27,15 @@ class Page
     # Get assets
     @assets = OpenStruct.new(scripts: {}, styles: {}, images: {})
 
-    @path.input.dirname.glob(Site::Types[:script]).each do |p|
+    @path.input.dirname.glob(Site::Types.script).each do |p|
       @assets.scripts[p.basename.to_s] = Script.new(@site, p, self)
     end
 
-    @path.input.dirname.glob(Site::Types[:images]).each do |p|
+    @path.input.dirname.glob(Site::Types.images).each do |p|
       @assets.images[p.basename.to_s] = Image.new(@site, p, self)
     end
 
-    @path.input.dirname.glob(Site::Types[:style]).each do |p|
+    @path.input.dirname.glob(Site::Types.style).each do |p|
       @assets.styles[p.basename.to_s] = Stylesheet.new(@site, p, self)
     end
 

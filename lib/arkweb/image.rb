@@ -7,9 +7,9 @@ class Image
     @page = page
 
     if self.site_image?
-      @path = Path.new(@site, input_path, @site.out(:images))
+      @path = Path.new(@site, input_path, @site.output.images)
     else
-      @path = Path.new(@site, input_path, @site.out(:root), relative: true)
+      @path = Path.new(@site, input_path, @site.output.root, relative: true)
     end
 
     @name = @path.name
