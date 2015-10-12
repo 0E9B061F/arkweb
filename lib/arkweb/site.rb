@@ -17,19 +17,52 @@ class Site
   )
 
   def initialize(root, cli_conf=nil)
-
     # Basics
-  
-    @app = Application.new
     @root = Pathname.new(root)
     raise BrokenSiteError unless @root.directory?
     @name = @root.basename
 
+    @cli_conf = cli_conf
 
-    #
-    # Paths to special input directories and files
-    #
+    @app = Application.new
 
+    init_input
+    refresh
+
+    # Convenience
+    @title = @conf.title
+    @desc = @conf.desc || ''
+  end
+
+  attr_reader :app
+  attr_reader :root
+  attr_reader :name
+  attr_reader :title
+  attr_reader :desc
+  attr_reader :conf
+  attr_reader :hooks
+  attr_reader :input
+  attr_reader :output
+  attr_reader :assets
+  attr_reader :templates
+  attr_reader :path_cache
+  attr_reader :old_cache
+  attr_reader :smart_rendering
+
+  def refresh
+    init_conf
+    init_output
+    init_hooks
+    init_templates
+    init_assets
+    init_contents
+    init_pathcache
+  end
+
+  private
+
+  # Define paths to input files
+  def init_input
     @input = ClosedStruct.new do |input|
       input.aw           = @root + InputARKWEB
       input.header       = input.aw.join('header.yaml')
@@ -43,12 +76,10 @@ class Site
       input.before_hooks = input.hooks.join('before')
       input.after_hooks  = input.hooks.join('after')
     end
+  end
 
-
-    #
-    # Configure the site
-    #
-
+  # Configure the site
+  def init_conf
     # Default configuration values
     @conf = ClosedStruct.new(
       title:         'Untitled',
@@ -79,8 +110,8 @@ class Site
     header = Hash[header.map {|k,v| [k.to_sym, v] }]
 
     # Merge configuration sources
-    if cli_conf
-      cli_conf = Hash[cli_conf.opts.map {|k,v| [k.to_sym, v] }]
+    if @cli_conf
+      cli_conf = Hash[@cli_conf.opts.map {|k,v| [k.to_sym, v] }]
       @conf._update!(cli_conf)
     end
     @conf._update!(header)
@@ -88,13 +119,10 @@ class Site
     # Adjust types
     @conf.tmp = Pathname.new(@conf.tmp) if @conf.tmp
     @conf.output = Pathname.new(@conf.output) if @conf.output
+  end
 
-
-    #
-    # Define output paths
-    #
-
-    # Paths to where output files will be located
+  # Define output paths
+  def init_output
     @output = ClosedStruct.new do |out|
       out.tmp       = @conf.tmp || @input.aw.join('tmp')
       out.root      = @conf.output || @input.aw.join('output')
@@ -104,12 +132,10 @@ class Site
       out.favicons  = out.aw.join('favicons')
       out.pathcache = out.aw.join('.path-cache.yaml')
     end
+  end
 
-    
-    #
-    # Get hooks
-    #
-    
+  # Get hooks
+  def init_hooks
     @hooks = ClosedStruct.new do |hooks|
       hooks.before = []
       hooks.after = []
@@ -120,12 +146,10 @@ class Site
         hooks.after = @input.after_hooks.children.select {|c| c.executable? }
       end
     end
+  end
 
-
-    #
-    # Get templates
-    #
-    
+  # Get templates
+  def init_templates
     @templates = ClosedStruct.new do |templates|
       if @input.site_erb.exist?
         templates.site = @input.site_erb
@@ -145,14 +169,11 @@ class Site
         templates.autoindex = @app.root('templates/autoindex.html.erb')
       end
     end
+  end
 
-
-    #
-    # Get assets
-    #
-
+  # Get assets
+  def init_assets
     @assets = ClosedStruct.new do |assets|
-
       # Look for a favicon
       favicon_path = @input.aw.glob(Types.icon).first
       if favicon_path
@@ -176,13 +197,10 @@ class Site
       end
       assets.images = Hash[assets.images]
     end
+  end
 
-
-
-    #
-    # Get sections and pages
-    #
-
+  # Get sections and pages
+  def init_contents
     # Return a list of sections, which are any subdirectories excluding special subdirectories
     # The root directory is itself a section
     # Each section will later be scanned for pages and media, and then rendered
@@ -205,12 +223,10 @@ class Site
         @pages[page.path.link] = page
       end
     end
+  end
 
-
-    #
-    # Path cache
-    #
-
+  # Path cache
+  def init_pathcache
     @path_cache = ClosedStruct.new(
       pages:       [],
       images:      [],
@@ -230,28 +246,11 @@ class Site
     @path_cache.stylesheets += @assets.styles.values.map {|s| s.path.link }
     @path_cache.pages += @pages.values.map {|p| p.path.link }
     @path_cache.sections += @sections.values.map {|s| s.path.link }
-
-
-    # Convenience
-
-    @title = @conf.title
-    @desc = @conf.desc || ''
   end
 
-  attr_reader :app
-  attr_reader :root
-  attr_reader :conf
-  attr_reader :name
-  attr_reader :title
-  attr_reader :desc
-  attr_reader :hooks
-  attr_reader :input
-  attr_reader :output
-  attr_reader :assets
-  attr_reader :templates
-  attr_reader :path_cache
-  attr_reader :old_cache
-  attr_reader :smart_rendering
+
+
+  public
 
 
   #
