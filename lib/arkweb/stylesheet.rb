@@ -42,8 +42,8 @@ class Stylesheet
   end
 
   # Return a link to this stylesheet
-  def link_to()
-    HTML.link_to(self)
+  def link_to(**attr)
+    HTML.link_style(self, **attr)
   end
 
   def inspect

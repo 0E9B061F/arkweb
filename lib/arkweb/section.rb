@@ -2,7 +2,6 @@ module ARKWEB
 
 class Section
 
-  IncludeFileName = 'include.yaml'
   SectionHeader = 'section.yaml'
 
   def initialize(site, input_path)
@@ -101,11 +100,11 @@ class Section
     return @pages.length
   end
 
-  def link_to(**args)
+  def link_to(**attr)
     if self.has_index?
-      return HTML.link_to(self, **args)
+      return HTML.link_section(self, **attr)
     else
-      return HTML.span(@title, **args)
+      return HTML.span(@title, **attr)
     end
   end
 

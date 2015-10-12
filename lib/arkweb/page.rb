@@ -68,15 +68,6 @@ class Page
       title = @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
     end
 
-    #@conf = PageConf.new
-    #@conf.title = title
-    #@conf.desc = false
-    #@conf.keywords = []
-    #@conf.collect = [@section.path.link]
-    #@conf.paginate = autoindex ? 5 : false
-    #@conf.index = false
-    #@conf.date = false
-
     @conf = {
       :title => title,
       :desc => false,
@@ -178,8 +169,8 @@ class Page
     return @erb
   end
 
-  def link_to(**args)
-    return HTML.link_to(self, **args)
+  def link_to(**attr)
+    return HTML.link_page(self, **attr)
   end
 
   def to_s

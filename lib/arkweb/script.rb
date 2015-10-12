@@ -24,8 +24,8 @@ class Script
     return @page.nil?
   end
 
-  def link_to()
-    HTML.link_to(self)
+  def link_to(**attr)
+    HTML.link_script(self, **attr)
   end
 
   # Represent this object as the working path to the given stylesheet
