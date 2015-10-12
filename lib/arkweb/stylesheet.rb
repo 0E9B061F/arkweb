@@ -42,8 +42,8 @@ class Stylesheet
   end
 
   # Return a link to this stylesheet
-  def head_link()
-    return %Q(<link href="#{@path.link}" rel="stylesheet" type="text/css" />)
+  def link_to()
+    HTML.link_to(self)
   end
 
   def inspect

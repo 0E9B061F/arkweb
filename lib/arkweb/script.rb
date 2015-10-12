@@ -24,8 +24,8 @@ class Script
     return @page.nil?
   end
 
-  def head_link
-    return %Q(<script src="#{@path.link}"></script>)
+  def link_to()
+    HTML.link_to(self)
   end
 
   # Represent this object as the working path to the given stylesheet

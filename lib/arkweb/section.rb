@@ -46,7 +46,7 @@ class Section
     end
 
     if self.conf(:autoindex) && !self.has_page?('index')
-      @pages['index'] = Page.new(@site, @site.autoindex, self, autoindex: true)
+      @pages['index'] = Page.new(@site, @site.templates.autoindex, self, autoindex: true)
     end
 
     # Order pages by ctime and give them an index
@@ -103,10 +103,9 @@ class Section
 
   def link_to(**args)
     if self.has_index?
-      args[:text] ||= @title
       return HTML.link_to(self, **args)
     else
-      return HTML.span(@title)
+      return HTML.span(@title, **args)
     end
   end
 

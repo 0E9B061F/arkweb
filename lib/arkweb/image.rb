@@ -24,6 +24,10 @@ class Image
     return @page.nil?
   end
 
+  def link_to()
+    HTML.link_to(self)
+  end
+
   # Represent this object as the working path to the given stylesheet
   def to_s()
     return @path.link

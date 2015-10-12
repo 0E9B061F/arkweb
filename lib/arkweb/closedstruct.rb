@@ -1,8 +1,10 @@
 module ARKWEB
 
 class ClosedStruct
-  def initialize(**defaults)
+  def initialize(**defaults, &block)
     @data = defaults
+    @finalized = false
+    yield self if block_given?
     @finalized = !@data.empty?
   end
 
@@ -78,6 +80,11 @@ class ClosedStruct
 
   def _finalize!
     @finalized = true
+  end
+
+  def inspect
+    f = @finalized ? '!' : nil
+    %Q(#<AW::ClosedStruct#{f}:#{@data.keys.join(':')}>)
   end
 end
 

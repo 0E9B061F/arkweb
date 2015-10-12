@@ -43,6 +43,10 @@ class Favicon
 
   public
 
+  def link_to(**attr)
+    HTML.link_favicon(self, **attr)
+  end
+
   def inspect
     return "#<AW::Favicon:#{@input_path.basename}>"
   end

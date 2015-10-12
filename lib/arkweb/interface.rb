@@ -67,7 +67,8 @@ class Interface
     w = ARK::Watcher.new(@sitepath)
     w.hook('any file', 'created directory', 'deleted directory') do
       site = Site.new(@sitepath, @conf)
-      site.engine.write_site
+      engine = Engine.new(site)
+      engine.write_site
     end
     w.begin
   end
@@ -76,8 +77,9 @@ class Interface
   # directory. This is called from Interface#run
   def render
     site = Site.new(@sitepath, @conf)
+    engine = Engine.new(site)
     msg "Assembling site: #{site.conf.title}"
-    site.engine.write_site
+    engine.write_site
     msg "Done!"
   end
 

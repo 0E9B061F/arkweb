@@ -179,7 +179,6 @@ class Page
   end
 
   def link_to(**args)
-    args[:text] ||= @title
     return HTML.link_to(self, **args)
   end
 
@@ -224,7 +223,7 @@ class Collection
       if i == index
         links << "<span class=\"pagination pagination-current\">#{index}</span>"
       else
-        links << @page.link_to(text: i, klass: 'pagination pagination-link', index: i)
+        links << @page.link_to(text: i, class: 'pagination pagination-link', index: i)
       end
     end
     links.join("\n")

@@ -31,12 +31,12 @@ class Engine
       @java_press = YUI::JavaScriptCompressor.new
     end
 
-    if @site.page_template
-      @page_erb = @site.page_template.read
+    if @site.templates.page
+      @page_erb = @site.templates.page.read
     else
       @page_erb = false
     end
-    @site_erb = @site.site_template.read
+    @site_erb = @site.templates.site.read
 
     @cropped = {}
     @changed_sections = []
@@ -112,7 +112,7 @@ class Engine
       raise "Cannot render page type: #{page.type}"
     end
     if @page_erb
-      body = self.evaluate_erb(@page_erb, @site.page_template,
+      body = self.evaluate_erb(@page_erb, @site.templates.page,
         site: @site,
         section: page.section,
         page: page,
@@ -120,7 +120,7 @@ class Engine
         body: body
       )
     end
-    return self.evaluate_erb(@site_erb, @site.site_template,
+    return self.evaluate_erb(@site_erb, @site.templates.site,
       site: @site,
       section: page.section,
       page: page,
@@ -166,7 +166,7 @@ class Engine
   end
 
   def render_styles
-    @site.styles.each do |name, style|
+    @site.styles.each do |style|
       self.render_style(style)
     end
     @site.pages.each do |page|
@@ -279,18 +279,18 @@ class Engine
   end
 
   def run_before_hooks
-    self.run_hooks(@site.before_hooks)
+    self.run_hooks(@site.hooks.before)
   end
 
   def run_after_hooks
-    self.run_hooks(@site.after_hooks)
+    self.run_hooks(@site.hooks.after)
   end
 
   def generate_favicons
-    if !@site.favicon.nil? && ARKWEB.optional_gem('mini_magick')
+    if !@site.assets.favicon.nil? && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
       FileUtils.mkdir_p(@site.output.favicons)
-      @site.favicon.formats.each do |format|
+      @site.assets.favicon.formats.each do |format|
         if format.path.changed?
           dbg "#{format.path.output.basename}: generating.", 1
           img = MiniMagick::Image.open(format.path.input)
@@ -328,7 +328,7 @@ class Engine
 
   def write_path_cache
     cache = YAML.dump(@site.path_cache._data)
-    @site.path_cache_file.write(cache)
+    @site.output.pathcache.write(cache)
   end
 
   def analyze_output
@@ -339,7 +339,7 @@ class Engine
       end
     end
     @site.path_cache._each do |type,paths|
-      leftovers = @site.old_path_cache[type] - paths
+      leftovers = @site.old_cache[type] - paths
       @cropped[type] = leftovers
       @cropped[type].each do |path|
         if type == :pages
