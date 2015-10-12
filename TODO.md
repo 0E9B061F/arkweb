@@ -60,3 +60,5 @@ specific dirs for each: AW/images, AW/styles, AW/scripts
 perhaps change favicon to be configurable, so any site image asset can be
 configured as the favicon
 
+add structured data pages with types and relations
+
