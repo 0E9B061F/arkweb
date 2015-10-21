@@ -37,6 +37,7 @@ fix version information bug
 
 allow markdown in frontmatter `desc:' fields, since these will be used as
 snippets and in autoindices as content.
+
 regarding snippets: barring dependancy cycle checks, allow for snippets to be
 taken from pages without an ERB pass (since these can't contain content from
 other pages). the #snippet method would fall back on #desc for pages with ERB
@@ -61,4 +62,10 @@ perhaps change favicon to be configurable, so any site image asset can be
 configured as the favicon
 
 add structured data pages with types and relations
+
+the path object requires a "unique link" attribute for addressing resources.
+currently, section indices will have the same link as their section, making them
+unaddressable by link
+
+
 
