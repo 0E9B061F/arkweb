@@ -15,7 +15,7 @@ class ClosedStruct
     if @data.has_key?(k)
       return @data[k]
     else
-      raise NoMethodError, "Struct has no attribute named '#{k}'"
+      raise NoMethodError, "#{self.inspect} has no attribute named '#{k.inspect}'"
     end
   end
 

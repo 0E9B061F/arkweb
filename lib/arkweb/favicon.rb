@@ -32,6 +32,7 @@ class Favicon
     format('png', '96x96')
     format('png', '192x192')
   end
+  attr_reader :input_path
   attr_reader :formats
 
   private

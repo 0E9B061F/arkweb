@@ -12,6 +12,9 @@ require 'ark/cli'
 
 require_relative 'arkweb/patches'
 require_relative 'arkweb/closedstruct'
+require_relative 'arkweb/closedhash'
+require_relative 'arkweb/hasassets'
+require_relative 'arkweb/hascontent'
 require_relative 'arkweb/error'
 require_relative 'arkweb/application'
 require_relative 'arkweb/site'
@@ -26,11 +29,11 @@ require_relative 'arkweb/helper'
 require_relative 'arkweb/engine'
 require_relative 'arkweb/interface'
 
+
 include ARK::Log
 
 
 module ARKWEB
-
   Gem = {}
 
   # Attempt to load an optional dependency
@@ -45,8 +48,8 @@ module ARKWEB
       false
     end
   end
-
 end # module ARKWEB
+
 
 AW = ARKWEB
 

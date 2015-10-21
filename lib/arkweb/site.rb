@@ -1,6 +1,8 @@
 module ARKWEB
 
 class Site
+  include HasAssets
+  include HasContent
 
   RootSectionName = 'root'
   InputARKWEB     = 'AW'
@@ -54,7 +56,7 @@ class Site
     init_output
     init_hooks
     init_templates
-    init_assets
+    init_assets(@input.aw)
     init_contents
     init_pathcache
   end
@@ -171,34 +173,6 @@ class Site
     end
   end
 
-  # Get assets
-  def init_assets
-    @assets = ClosedStruct.new do |assets|
-      # Look for a favicon
-      favicon_path = @input.aw.glob(Types.icon).first
-      if favicon_path
-        assets.favicon = Favicon.new(self, favicon_path)
-      else
-        assets.favicon = false
-      end
-     
-      # Get all stylesheets in the AW dir
-      sheets = @input.aw.glob(Types.style)
-      assets.styles = {}
-      sheets.each do |s|
-        s = Stylesheet.new(self, s)
-        assets.styles[s.name] = s
-      end
-
-      # Get all images in the image dir
-      assets.images = @input.images.glob(Types.images).map do |p|
-        img = Image.new(self, p)
-        [img.path.basename, img]
-      end
-      assets.images = Hash[assets.images]
-    end
-  end
-
   # Get sections and pages
   def init_contents
     # Return a list of sections, which are any subdirectories excluding special subdirectories
@@ -214,12 +188,12 @@ class Site
         end
       end
     end
-    @sections = {}
-    @pages = {}
+    @sections = ClosedHash.new
+    @pages = ClosedHash.new
     subdirs.each do |path|
-      s = Section.new(self, path)
-      @sections[s.path.link] = s
-      s.pages.each do |page|
+      section = Section.new(self, path)
+      @sections[section.path.link] = section
+      section.pages.each do |page|
         @pages[page.path.link] = page
       end
     end
@@ -265,13 +239,13 @@ class Site
   # Get sections and pages by their link path
   def addr(path)
     path = Pathname.new(path) unless path.is_a?(Pathname)
-    @pages.merge(@sections).guarded(path, iname: 'section or path', kname: 'address')
+    @pages.merge(@sections).get(path, iname: 'section or path', kname: 'address')
   end
 
   # Access site sections by name
   def section(key)
     key = Pathname.new(key) unless key.is_a?(Pathname)
-    @sections.guarded(key, iname: 'section', kname: 'address')
+    @sections.get(key, iname: 'section', kname: 'address')
   end
 
   # Return an array of all sections in the site
@@ -282,28 +256,12 @@ class Site
   # Access pages by name
   def page(key)
     key = Pathname.new(key) unless key.is_a?(Pathname)
-    @pages.guarded(key, iname: 'page', kname: 'address')
+    @pages.get(key, iname: 'page', kname: 'address')
   end
 
   # Return an array of all pages on the site
   def pages
     return @pages.values
-  end
-
-  def images
-    return @assets.images.values
-  end
-
-  def image(name)
-    @assets.images.guarded(name.to_s, iname: 'image', kname: 'name')
-  end
-
-  def styles
-    return @assets.styles.values
-  end
-
-  def style(name)
-    @assets.styles.guarded(name.to_s, iname: 'style', kname: 'name')
   end
 
 

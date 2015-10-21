@@ -1,6 +1,7 @@
 module ARKWEB
 
 class Section
+  include HasContent
 
   SectionHeader = 'section.yaml'
 
@@ -58,8 +59,8 @@ class Section
   attr_reader :path
   attr_reader :title
   attr_reader :desc
-  attr_reader :pages
   attr_reader :ordered_pages
+
 
   def conf(key)
     key = key.to_sym
@@ -69,35 +70,12 @@ class Section
     return @conf[key]
   end
 
-  def pages
-    return @pages.values
-  end
-
-  def members
-    return @pages.select {|n,p| n != 'index' }.values
-  end
-
-  def page(name)
-    unless self.has_page?(name)
-      raise ArgumentError, "Section #{self} has no page named '#{name}'"
-    end
-    @pages[name]
-  end
-
-  def has_page?(name)
-    @pages.has_key?(name)
-  end
-
   def has_index?
     return self.has_page?('index') || self.conf(:autoindex)
   end
 
   def root?
     return @path.link == Pathname.new('/')
-  end
-
-  def page_count
-    return @pages.length
   end
 
   def link_to(**attr)

@@ -1,6 +1,7 @@
 module ARKWEB
 
 class Page
+  include HasAssets
 
   def initialize(site, input_path, section, autoindex: false)
     @site    = site
@@ -24,20 +25,7 @@ class Page
       @name = @path.name
     end
 
-    # Get assets
-    @assets = OpenStruct.new(scripts: {}, styles: {}, images: {})
-
-    @path.input.dirname.glob(Site::Types.script).each do |p|
-      @assets.scripts[p.basename.to_s] = Script.new(@site, p, self)
-    end
-
-    @path.input.dirname.glob(Site::Types.images).each do |p|
-      @assets.images[p.basename.to_s] = Image.new(@site, p, self)
-    end
-
-    @path.input.dirname.glob(Site::Types.style).each do |p|
-      @assets.styles[p.basename.to_s] = Stylesheet.new(@site, p, self)
-    end
+    init_assets(@path.input.dirname)
 
     @index = 0
 
@@ -68,37 +56,39 @@ class Page
       title = @path.name.tr('-', ' ').split(/(\W)/).map(&:capitalize).join
     end
 
-    @conf = {
-      :title => title,
-      :desc => false,
-      :keywords => [],
-      :collect => [@section.path.link],
-      :paginate => false,
-      :index => false,
-      :date => false
-    }
-    @conf[:paginate] = 5 if autoindex
+    paginate = autoindex ? 5 : false
+
+    @conf = ClosedStruct.new(
+      title: title,
+      desc: false,
+      keywords: [],
+      collect: [@section.path.link],
+      paginate: paginate,
+      index: false,
+      date: false
+    )
     unless header.empty?
       header = Hash[header.map {|k,v| [k.to_sym, v] }]
-      @conf = @conf.merge(header) {|k,old,new| new && !new.to_s.empty? ? new : old }
+      @conf._update!(header)
     end
-    @conf[:collect] = [@conf[:collect]].flatten.map(&:to_s)
+    @conf.collect = [@conf.collect].flatten.map(&:to_s)
 
-    @title = self.conf(:title)
-    @desc = self.conf(:desc) || ''
-    @collect = self.conf(:collect)
-    @paginate = self.conf(:paginate) ? self.conf(:paginate).to_i : false
+    @title = @conf.title
+    @desc = @conf.desc || ''
+    @collect = @conf.collect
+    @paginate = @conf.paginate ? @conf.paginate.to_i : false
 
-    @user_index = self.conf(:index) || -1
+    @user_index = @conf.index || -1
 
-    @date = if self.conf(:date)
-      @date = Time.parse(self.conf(:date))
+    @date = if @conf.date
+      @date = Time.parse(@conf.date)
     else
       @date = @path.input.ctime
     end
   end
   attr_reader :site
   attr_reader :path
+  attr_reader :conf
   attr_reader :section
   attr_reader :type
   attr_reader :name
@@ -109,48 +99,14 @@ class Page
   attr_reader :desc
   attr_reader :date
   attr_reader :user_index
-  attr_reader :assets
   attr_accessor :index
 
-  def conf(key)
-    key = key.to_sym
-    unless @conf.has_key?(key)
-      raise ArgumentError "No such configuration: #{key}"
-    end
-    return @conf[key]
+  def configs
+    @conf._data
   end
 
-  def image(name)
-    unless @assets.images.has_key?(name)
-      raise ArgumentError "No such image: #{name}"
-    end
-    return @assets.images[name]
-  end
-
-  def images
-    return @assets.images.values
-  end
-
-  def script
-    unless @assets.scripts.has_key?(name)
-      raise ArgumentError "No such script: #{name}"
-    end
-    return @assets.scripts[name]
-  end
-
-  def scripts
-    return @assets.scripts.values
-  end
-
-  def style
-    unless @assets.styles.has_key?(name)
-      raise ArgumentError "No such stylesheet: #{name}"
-    end
-    return @assets.styles[name]
-  end
-
-  def styles
-    return @assets.styles.values
+  def composite?
+    return @composite
   end
 
   def index?
