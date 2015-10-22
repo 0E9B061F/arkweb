@@ -9,7 +9,7 @@ class Site
   OutputARKWEB    = 'AW'
 
   Types = ClosedStruct.new(
-    pages:  "*.{erb,md,html,wiki}",
+    pages:  "*.{erb,md,html,wiki,page/}",
     images: "*.{jpg,jpeg,png,gif}",
     script: "*.js",
     style:  "*.{css,scss,sass}",
@@ -173,33 +173,19 @@ class Site
     end
   end
 
-  # Get sections and pages
+  # Begin section and page object creation.
   def init_contents
-    # Return a list of sections, which are any subdirectories excluding special subdirectories
-    # The root directory is itself a section
-    # Each section will later be scanned for pages and media, and then rendered
-    subdirs = []
-    @root.find do |path|
-      if path.directory?
-        if path == @input.aw || path.basename.to_s[0] == '.' || path.basename.to_s[-5..-1] == '.page'
-          Find.prune
-        else
-          subdirs << path
-        end
-      end
-    end
     @sections = ClosedHash.new
     @pages = ClosedHash.new
-    subdirs.each do |path|
-      section = Section.new(self, path)
-      @sections[section.path.link] = section
-      section.pages.each do |page|
-        @pages[page.path.link] = page
-      end
-    end
+
+    # Create the root section, which will create all sections and pages beneath
+    # it in cascade. Each section will call #register_section after creation,
+    # allowing us to store each section and page here on the site.
+    Section.new(self, @root)
   end
 
-  # Path cache
+  # Initialize the path cache and load the last path cache, if one exists. This
+  # is used for smart rendering, to avoid re-rendering unchanged objects.
   def init_pathcache
     @path_cache = ClosedStruct.new(
       pages:       [],
@@ -225,6 +211,17 @@ class Site
 
 
   public
+
+  #
+  # Internal
+  #
+
+  def register_section(section)
+    @sections[section.path.link] = section
+    section.pages.each do |page|
+      @pages[page.path.link] = page
+    end
+  end
 
 
   #

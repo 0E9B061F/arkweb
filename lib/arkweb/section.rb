@@ -32,22 +32,7 @@ class Section
     @title = self.conf(:title)
     @desc = self.conf(:desc) || ''
 
-    # Get all single-file pages in this section
-    @pages = {}
-    @path.input.glob(Site::Types.pages).each do |path|
-      page = Page.new(@site, path, self)
-      @pages[page.path.name] = page
-    end
-
-    # Get all composite pages in this section
-    @path.input.glob('*.page/').each do |path|
-      page = Page.new(@site, path, self)
-      @pages[page.path.name] = page
-    end
-
-    if self.conf(:autoindex) && !self.has_page?('index')
-      @pages['index'] = Page.new(@site, @site.templates.autoindex, self, autoindex: true)
-    end
+    init_contents
 
     # Order pages by ctime and give them an index
     @ordered_pages = Hash[@pages.sort {|p1,p2| p1.last <=> p2.last }]
@@ -61,6 +46,34 @@ class Section
   attr_reader :desc
   attr_reader :ordered_pages
 
+  private
+
+  def init_contents
+    @pages = ClosedHash.new
+    @sections = ClosedHash.new
+
+    # Get pages
+    @path.input.glob(Site::Types.pages).each do |path|
+      page = Page.new(@site, path, self)
+      @pages[page.path.name] = page
+    end
+
+    if self.conf(:autoindex) && !self.has_page?('index')
+      @pages['index'] = Page.new(@site, @site.templates.autoindex, self, autoindex: true)
+    end
+
+    # Get sections
+    @path.input.glob('*/').reject do |path|
+      (self.root? && path.basename.to_s == Site::InputARKWEB) || path.to_s[/\.page\/*$/]
+    end.each do |path|
+      section = Section.new(@site, path)
+      @sections[section.path.name] = section
+    end
+
+    @site.register_section(self)
+  end
+
+  public
 
   def conf(key)
     key = key.to_sym

@@ -32,7 +32,6 @@ module HasContent
   def sections
     @sections.values
   end
-
 end
 
 end # module ARKWEB
