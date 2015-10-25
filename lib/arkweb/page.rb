@@ -101,12 +101,91 @@ class Page
   attr_reader :user_index
   attr_accessor :index
 
+  private
+
+  def descend(element, &block)
+    element.children.each do |e|
+      if e.text?
+        e.content = e.content.strip
+        yield e if e.content != ""
+      end
+      descend(e, &block)
+    end
+  end
+
+  def snip_text(text, max)
+    count = 0
+    out = []
+    done = false
+    text.split(/\s+/).each do |word|
+      new_count = count + word.length
+      new_count += 1 if out.length > 0
+      if new_count > max
+        done = true
+      else
+        count = new_count
+        out << word
+      end
+      break if done
+    end
+    return out.join(" ")
+  end
+
+  def snip_html(html, max)
+    max -= 4
+    count = 0
+    erasing = false
+    doc = Nokogiri::HTML(html)
+    descend(doc) do |text|
+      p = text.parent
+      if erasing
+        text.remove
+        p.remove if p.text == ''
+      elsif count + text.text.length > max
+        text.content = snip_text(text.text, max - count)
+        count += text.text.length
+        erasing = true
+      else
+        count += text.text.length
+      end
+    end
+    doc.traverse do |e|
+      if e.element?
+        if e.name[/^h[1-6]$/]
+          e.name = "span"
+          e["class"] = "aw-snippet-title"
+        elsif e.name == "p" || e.name == "span"
+          e["class"] = "aw-snippet-text"
+        else
+          e.remove_attribute("class")
+        end
+      end
+    end
+    textwise = []
+    descend(doc) {|t| textwise << t }
+    ellipsis = Nokogiri::XML::Node.new("span", doc)
+    ellipsis.content = " ..."
+    ellipsis["class"] = "aw-snippet-ellipsis"
+    textwise.last.parent.add_child(ellipsis)
+    wrap = Nokogiri::XML::Node.new("div", doc)
+    wrap[:class] = "aw-snippet"
+    doc.xpath('//body/*').each {|e| e.parent = wrap if e.element? }
+    doc.xpath('//body').first.add_child(wrap)
+    return doc.xpath('//body/*').to_html
+  end
+
+  public
+
   def configs
     @conf._data
   end
 
   def composite?
     return @composite
+  end
+
+  def rendered
+    @rendered ||= Engine.render_page_contents(self)
   end
 
   def index?
@@ -119,6 +198,15 @@ class Page
     else
       return @path.link
     end
+  end
+
+  def snippet(max=200, wordwise=false)
+    @snippet ||= if self.has_erb?
+      snip_text(@desc, max)
+    else
+      snip_html(self.rendered, max)
+    end
+    return @snippet
   end
 
   def has_erb?

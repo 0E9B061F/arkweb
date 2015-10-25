@@ -9,9 +9,7 @@ pagesize: 5
 <p>
 <% @collection.paginate(@index, ascending: false).each do |page| %>
   <h3><%= page.link_to %></h3>
-  <% if page.desc %>
-    <p><%= page.desc %></p>
-  <% end %>
+  <p><%= page.snippet %></p>
 <% end %>
 <br/>
 <br/>

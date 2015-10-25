@@ -38,13 +38,6 @@ fix version information bug
 allow markdown in frontmatter `desc:' fields, since these will be used as
 snippets and in autoindices as content.
 
-regarding snippets: barring dependancy cycle checks, allow for snippets to be
-taken from pages without an ERB pass (since these can't contain content from
-other pages). the #snippet method would fall back on #desc for pages with ERB
-passes.
-
-make sure assets are working right for section indices
-
 support for pages written as plain text without any markup, i.e., `.txt` files
 txt files will be rendered into a preformatted tag
 
@@ -52,11 +45,6 @@ builtin support for frameworks like bootstrap and jquery
 
 store and makes times accessible for: page render time, init time, total render
 time
-
-implement site-wide script assets
-
-allow images, styles, and scripts in the base AW input directory, as well as
-specific dirs for each: AW/images, AW/styles, AW/scripts
 
 perhaps change favicon to be configurable, so any site image asset can be
 configured as the favicon

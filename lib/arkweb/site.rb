@@ -158,11 +158,14 @@ class Site
       else
         templates.site = @app.root('templates/site.html.erb')
       end
+      templates.site_data = templates.site.read
 
       if @input.page_erb.exist?
         templates.page = @input.page_erb
+        templates.page_data = templates.page.read
       else
         templates.page = false
+        templates.page_data = false
       end
 
       if @input.autoindex.exist?
@@ -170,6 +173,7 @@ class Site
       else
         templates.autoindex = @app.root('templates/autoindex.html.erb')
       end
+      templates.autoindex_data = templates.autoindex.read
     end
   end
 

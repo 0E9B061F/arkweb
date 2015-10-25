@@ -43,7 +43,7 @@ class Engine
   end
   attr_reader :pages
 
-  def evaluate_erb(data, filename=false, **env)
+  def self.evaluate_erb(data, filename=false, **env)
     box = Sandbox.new(env)
     begin
       erb = ERB.new(data)
@@ -56,7 +56,7 @@ class Engine
     end
   end
 
-  def evaluate_md(data, filename=false)
+  def self.evaluate_md(data, filename=false)
     return unless ARKWEB.optional_gem('rdiscount')
     begin
       RDiscount.new(data).to_html
@@ -68,7 +68,7 @@ class Engine
     end
   end
 
-  def evaluate_wiki(data, filename=false)
+  def self.evaluate_wiki(data, filename=false)
     return unless ARKWEB.optional_gem('wikicloth')
     begin
       WikiCloth::Parser.new(:data => data).to_html
@@ -80,15 +80,13 @@ class Engine
     end
   end
 
-  def render_page(page, index=nil, collection=nil)
-    if index
-      dbg "Rendering index #{index}", 1
-    end
-    helper = Helper.new(@site, page.section, page)
+  def self.render_page_contents(page, index=nil, collection=nil)
+    site = page.site
+    helper = Helper.new(site, page.section, page)
     if page.has_erb?
       dbg "Evaluating ERB", 1
-      markup = self.evaluate_erb(page.contents, page.path.input,
-        site: @site,
+      markup = evaluate_erb(page.contents, page.path.input,
+        site: site,
         section: page.section,
         page: page,
         helper: helper,
@@ -101,31 +99,40 @@ class Engine
     body = case page.type
     when 'md'
       dbg "Evaluating Markdown", 1
-      self.evaluate_md(markup, page.path.input)
+      evaluate_md(markup, page.path.input)
     when 'wiki'
       dbg "Evaluating MediaWiki markup", 1
-      self.evaluate_wiki(markup, page.path.input)
+      evaluate_wiki(markup, page.path.input)
     when 'html'
       markup
     else
       # XXX
       raise "Cannot render page type: #{page.type}"
     end
-    if @page_erb
-      body = self.evaluate_erb(@page_erb, @site.templates.page,
-        site: @site,
+  end
+
+  def self.render_page(page, index=nil, collection=nil)
+    if index
+      dbg "Rendering index #{index}", 1
+    end
+    site = page.site
+    helper = Helper.new(site, page.section, page)
+    contents = render_page_contents(page, index, collection)
+    if site.templates.page
+      contents = evaluate_erb(site.templates.page_data, site.templates.page,
+        site: site,
         section: page.section,
         page: page,
         helper: helper,
-        body: body
+        body: contents
       )
     end
-    return self.evaluate_erb(@site_erb, @site.templates.site,
-      site: @site,
+    return evaluate_erb(site.templates.site_data, site.templates.site,
+      site: site,
       section: page.section,
       page: page,
       helper: helper,
-      body: body
+      body: contents
     )
   end
 
@@ -188,7 +195,7 @@ class Engine
           pages = page.collect.map {|a| @site.section(a).members }.flatten
           collection = Collection.new(page, pages, page.paginate)
           collection.range.each do |index|
-            data = self.render_page(page, index, collection)
+            data = Engine.render_page(page, index, collection)
             page.path.paginated_output(index).write(data)
             dbg "Wrote index #{index}", 1
           end
@@ -197,7 +204,7 @@ class Engine
         end
       else
         if page.path.changed?
-          data = self.render_page(page)
+          data = Engine.render_page(page)
           page.path.output.write(data)
           dbg "Wrote page", 1
         else
