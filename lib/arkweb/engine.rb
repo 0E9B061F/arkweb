@@ -82,7 +82,7 @@ class Engine
 
   def self.render_page_contents(page, index=nil, collection=nil)
     site = page.site
-    helper = Helper.new(site, page.section, page)
+    helper = Helper.new(site, page.section, page, collection, index)
     if page.has_erb?
       dbg "Evaluating ERB", 1
       markup = evaluate_erb(page.contents, page.path.input,
@@ -116,7 +116,7 @@ class Engine
       dbg "Rendering index #{index}", 1
     end
     site = page.site
-    helper = Helper.new(site, page.section, page)
+    helper = Helper.new(site, page.section, page, collection, index)
     contents = render_page_contents(page, index, collection)
     if site.templates.page
       contents = evaluate_erb(site.templates.page_data, site.templates.page,

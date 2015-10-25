@@ -129,10 +129,33 @@ end
 
 
 class Helper
-  def initialize(site, section, page)
+  def initialize(site, section, page, collection, index)
     @site = site
     @page = page
     @section = section
+    @collection = collection
+    @index = index
+  end
+
+  def pagination(**opts)
+    out = ""
+    @collection.paginate(@index, **opts).each do |page|
+      entry = ""
+      date = page.date.strftime("%B %e, %Y")
+      tags = page.conf[:keywords].join(", ")
+      tags = "Tags: #{tags}"
+      entry += HTML.tag("h3", page.link_to, class: "aw-page-title")
+      entry += HTML.tag("span", date, class: "aw-page-date")
+      entry += HTML.open_tag("br")
+      unless page.conf[:keywords].empty?
+        entry += HTML.tag("span", tags, class: "aw-page-tags")
+        entry += HTML.open_tag("br")
+      end
+      entry += HTML.tag("div", page.snippet, class: "aw-page-preview")
+      out += HTML.tag("div", entry, class: "aw-page")
+    end
+    out += HTML.tag("span", "Go to page: #{@collection.links(@index)}")
+    return out
   end
 
   # Return the full title for a given page, constructed from the site title,

@@ -68,15 +68,7 @@ paginate: 4
 </table>
 
 <div class="pagination-example">
-<h2>Pagination:</h2>
-
-<% @collection.paginate(@index, sort: :date, ascending: false).each do |page| %>
-  <div>
-    <h3><%= page.link_to %></h3>
-    <%= page.snippet %>
-  </div>
-<% end %>
-<br/>
-<span>Go to page: <%= @collection.links(@index) %></span>
+  <h2>Pagination:</h2>
+  <%= @helper.pagination %>
 </div>
 
