@@ -23,8 +23,11 @@ body {
     margin: 0;
     display: inline;
   }
-  h2, h3 {
-    font-weight: normal;
+  h3 {
+    font-size: 0.8em;
+  }
+  .version {
+    font-size: 1.4em;
   }
   img {
     float: right;
@@ -34,6 +37,7 @@ body {
 
 h1,h2,h3,h4,h5,h6 {
   font-family: "Consolas", monospace;
+  font-weight: normal;
 }
 
 .version {
@@ -50,7 +54,6 @@ p, pre {
 }
 
 table {
-	font-size: 1.2em;
   padding: 0;
   width: 100%;
   margin-bottom: 1em;
@@ -90,13 +93,15 @@ th {
   padding-left: 1em;
   padding-right: 0.5em;
 	text-align: right;
+  font-weight: normal;
+  &:after {
+    content: ":";
+  }
 }
 
 .pagination-example {
-  clear: left;
-  margin-top: 1em;
-  padding-top: 1em;
-  border-top: 2px solid #454545;
+  float: right;
+  width: 48%;
 }
 
 .code {
@@ -107,8 +112,7 @@ caption {
   padding-top: 0.5em;
   padding-bottom: 0.25em;
   text-align: left;
-  font-weight: bold;
-  font-size: 1.2em;
+  font-size: 1.1em;
 }
 
 .squirrel-1 {
@@ -130,9 +134,21 @@ caption {
   font-family: Pompiere;
 }
 
+.diagnostics {
+  width: 50%;
+  float: left;
+}
+
+.diagnostics-pagelist tr {
+  font-size: 0.7em;
+}
+
 .aw-page {
-  margin-top: 1em;
-  margin-bottom: 1em;
+  margin-top: 1.2em;
+  margin-bottom: 2em;
+  p {
+    margin: 0;
+  }
 }
 
 .aw-page-title {
@@ -146,7 +162,7 @@ caption {
 }
 
 .aw-page-preview {
-  margin-top: 0.75em;
+  margin-top: 0.8em;
 }
 
 .aw-debug-page {

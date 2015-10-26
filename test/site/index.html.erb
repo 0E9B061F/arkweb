@@ -1,9 +1,13 @@
 ---
-collect: [/articles, /posts, /posts/scratch]
-paginate: 4
+collect:
+  - /articles
+  - /posts
+  - /posts/scratch
+paginate: 5
 ---
 
-<table class="table-half">
+<div class="diagnostics">
+<table>
 <caption>General</caption>
 
 <tr>
@@ -28,7 +32,7 @@ paginate: 4
 
 </table>
 
-<table class="table-half">
+<table>
   <caption>Sections</caption>
 
   <tbody>
@@ -41,7 +45,7 @@ paginate: 4
   </tbody>
 </table>
 
-<table>
+<table class="diagnostics-pagelist">
 
 <caption>Page List</caption>
 
@@ -66,9 +70,10 @@ paginate: 4
 <% end %>
 
 </table>
+</div>
 
 <div class="pagination-example">
-  <h2>Pagination:</h2>
+  <h2>Pagination</h2>
   <%= @helper.pagination %>
 </div>
 
