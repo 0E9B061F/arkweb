@@ -61,11 +61,13 @@ class Page
     @conf = ClosedStruct.new(
       title: title,
       desc: false,
+      author: @site.conf[:author],
       keywords: [],
       collect: [@section.path.link],
       paginate: paginate,
       index: false,
-      date: false
+      date: false,
+      fields: {}
     )
     unless header.empty?
       header = Hash[header.map {|k,v| [k.to_sym, v] }]
@@ -212,6 +214,10 @@ class Page
   end
 
   public
+
+  def [](fieldname)
+    @conf[:fields][fieldname]
+  end
 
   def configs
     @conf._data
