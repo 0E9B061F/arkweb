@@ -14,7 +14,11 @@
   <% end %>
 </div>
 
-<div class="content">
+<% unless @page.index? %>
+  <%= @helper.debug_page %>
+<% end %>
+
+<div class="content <%= "page-content" unless @page.index? %>">
   <%= @body %>
 </div>
 

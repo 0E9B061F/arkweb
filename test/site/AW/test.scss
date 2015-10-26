@@ -40,6 +40,9 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .content {
+  p {
+    text-align: justify;
+  }
 }
 
 p, pre {
@@ -60,7 +63,7 @@ table {
 
 a {
   text-decoration: none;
-  background-color: #F4F4DF;
+  background-color: #F8F8D2;
   color: #191919;
 }
 a:visited {
@@ -127,16 +130,39 @@ caption {
   font-family: Pompiere;
 }
 
+.aw-page {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 .aw-page-title {
   display: inline;
   font-size: 1.2em;
+  padding-right: 1em;
 }
 
-.aw-page-date, .aw-page-tags {
+.aw-page-date, .aw-page-tags, .aw-page-section {
   font-size: 0.9em;
 }
 
 .aw-page-preview {
-  margin-top: 1em;
+  margin-top: 0.75em;
+}
+
+.aw-debug-page {
+  font-size: 0.8em;
+  width: 45%;
+  float: right;
+}
+
+.page-content {
+  width: 50%;
+  float: left;
+}
+
+.aw-debug-subheading {
+  padding-top: 1.5em;
+  padding-bottom: 0.6em;
+  text-align: center;
 }
 

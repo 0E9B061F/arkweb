@@ -108,6 +108,12 @@ class HTML
     tag(tagname, items.join, **attr)
   end
 
+  def self.trpair(key, value, **attr)
+    row  = tag(:th, key)
+    row += tag(:td, value)
+    return tag(:tr, row)
+  end
+
   def self.attr(k,v)
     %Q( #{k}="#{v}")
   end
@@ -156,6 +162,48 @@ class Helper
     end
     out += HTML.tag("span", "Go to page: #{@collection.links(@index)}")
     return out
+  end
+
+  def debug_page
+    out = ""
+    out += HTML.tag(:caption, "Debug page: #{@page.path.link}")
+    out += HTML.tag(:tr, HTML.tag(:th, "Attributes", class: "aw-debug-subheading", colspan: 2))
+    out += HTML.trpair("Input path", @page.path.input)
+    out += HTML.trpair("Output path", @page.path.output)
+    out += HTML.trpair("Section", @page.section.link_to)
+    out += HTML.trpair("Derived date", @page.date.strftime("%B %e, %Y"))
+    out += HTML.trpair("ERB pass", @page.has_erb?)
+    out += HTML.trpair("Markup type", @page.type)
+    out += HTML.tag(:tr, HTML.tag(:th, "Header", class: "aw-debug-subheading", colspan: 2))
+    @page.conf._data.each do |key,val|
+      if val.is_a?(Array)
+        out += HTML.trpair(key.to_s.capitalize, val.join(", "))
+      elsif val.is_a?(Hash)
+        unless val.empty?
+          out += HTML.tag(:tr, HTML.tag(:th, key.to_s.capitalize, class: "aw-debug-subheading", colspan: 2))
+          val.each do |k,v|
+            out += HTML.trpair(k.to_s.capitalize, v)
+          end
+        end
+      else
+        out += HTML.trpair(key.to_s.capitalize, val)
+      end
+    end
+    out += HTML.tag(:tr, HTML.tag(:th, "Assets", class: "aw-debug-subheading", colspan: 2))
+    @page.assets._data.each do |key,val|
+      key = key.to_s.capitalize
+      if val.is_a?(Array)
+        out += HTML.trpair(key, val.join(", "))
+      elsif val.is_a?(Hash)
+        out += HTML.tag(:tr, HTML.tag(:th, key))
+        val.each do |k,v|
+          out += HTML.trpair(k.to_s.capitalize, v.to_s)
+        end
+      else
+        out += HTML.trpair(key, val)
+      end
+    end
+    HTML.tag(:table, out, class: "aw-debug aw-debug-page")
   end
 
   # Return the full title for a given page, constructed from the site title,
