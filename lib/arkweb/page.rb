@@ -174,6 +174,43 @@ class Page
     return doc.xpath('//body/*').to_html
   end
 
+  def descend_elements(element, &block)
+    element.children.each do |e|
+      if e.element?
+        yield e
+      end
+      descend_elements(e, &block)
+    end
+  end
+
+  def extract_text(html, max)
+    out = []
+    para = []
+    doc = Nokogiri::HTML(html)
+    descend_elements(doc) do |e|
+      texts = e.children.select do |c|
+        c.text? && !c.text.strip.empty?
+      end
+      unless texts.empty?
+        texts.flatten!
+        texts.map! do |t|
+          t.text.strip
+        end
+        texts = texts.join(' ')
+        if e.name[/^h[1-6]$/]
+          out << "#{para.join(' ')}" unless para.empty?
+          para = []
+          out << HTML.span(texts)
+        else
+          para << texts
+        end
+      end
+    end
+    out << "#{para.join(' ')}" unless para.empty?
+    out = out.join(' ')
+    return snip_html(HTML.tag(:p, out), max)
+  end
+
   public
 
   def configs
@@ -200,11 +237,15 @@ class Page
     end
   end
 
-  def snippet(max=200, wordwise=false)
+  def snippet(max=200, wordwise=false, reduce=true)
     @snippet ||= if self.has_erb?
       snip_text(@desc, max)
     else
-      snip_html(self.rendered, max)
+      if reduce
+        extract_text(self.rendered, max)
+      else
+        snip_html(self.rendered, max)
+      end
     end
     return @snippet
   end
