@@ -206,7 +206,9 @@ class Site
       @old_cache = false
     end
 
-    @path_cache.favicons += @assets.favicon.formats.map {|f| f.path.link }
+    if @assets.favicon
+      @path_cache.favicons += @assets.favicon.formats.map {|f| f.path.link }
+    end
     @path_cache.stylesheets += @assets.styles.values.map {|s| s.path.link }
     @path_cache.pages += @pages.values.map {|p| p.path.link }
     @path_cache.sections += @sections.values.map {|s| s.path.link }

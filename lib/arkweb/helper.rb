@@ -299,7 +299,7 @@ class Helper
   end
 
   def link_favicons
-    unless @site.assets.favicon.nil?
+    if @site.assets.favicon
       @site.assets.favicon.link_to
     end
   end

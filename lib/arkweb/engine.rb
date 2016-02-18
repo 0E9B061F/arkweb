@@ -294,7 +294,7 @@ class Engine
   end
 
   def generate_favicons
-    if !@site.assets.favicon.nil? && ARKWEB.optional_gem('mini_magick')
+    if @site.assets.favicon;w && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
       FileUtils.mkdir_p(@site.output.favicons)
       @site.assets.favicon.formats.each do |format|
