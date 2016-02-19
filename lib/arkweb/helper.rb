@@ -161,8 +161,10 @@ class Helper
         entry += HTML.tag(:span, tags, class: "aw-page-tags")
         entry += HTML.open_tag(:br)
       end
-      entry += HTML.tag(:div, page.snippet, class: "aw-page-preview")
-      out += HTML.tag(:div, entry, class: "aw-page")
+      unless page.empty?
+        entry += HTML.tag(:div, page.snippet, class: "aw-page-desc")
+      end
+      out += HTML.tag(:div, entry, class: "aw-page-preview")
     end
     out += HTML.tag(:span, "Go to page: #{@collection.links(@index)}")
     return out
