@@ -244,6 +244,7 @@ class Page
   end
 
   def snippet(max=200, wordwise=false, reduce=true)
+    return if @contents.empty?
     @snippet ||= if self.has_erb?
       snip_text(@desc, max)
     else
