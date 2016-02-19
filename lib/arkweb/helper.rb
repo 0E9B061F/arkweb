@@ -143,8 +143,8 @@ class Helper
     @index = index
   end
 
-  def pagination(**opts)
-    out = ""
+  def pagination(seperator: nil, **opts)
+    out = []
     @collection.paginate(@index, **opts).each do |page|
       entry = ""
       date = page.date.strftime("%B %e, %Y")
@@ -164,8 +164,9 @@ class Helper
       unless page.empty?
         entry += HTML.tag(:div, page.snippet, class: "aw-page-desc")
       end
-      out += HTML.tag(:div, entry, class: "aw-page-preview")
+      out << HTML.tag(:div, entry, class: "aw-page-preview")
     end
+    out = out.join(seperator)
     out += HTML.tag(:span, "Go to page: #{@collection.links(@index)}")
     return out
   end
