@@ -143,7 +143,7 @@ class Helper
     @index = index
   end
 
-  def pagination(seperator: nil, **opts)
+  def pagination(seperator: nil, seperate_links: false, label_links: "Page: ", **opts)
     out = []
     @collection.paginate(@index, **opts).each do |page|
       entry = ""
@@ -166,8 +166,15 @@ class Helper
       end
       out << HTML.tag(:div, entry, class: "aw-page-preview")
     end
-    out = out.join(seperator)
-    out += HTML.tag(:span, "Go to page: #{@collection.links(@index)}")
+    links = HTML.open_tag(:br)
+    links += HTML.tag(:span, "#{label_links}#{@collection.links(@index)}")
+    if seperate_links
+      out << links
+      out = out.join(seperator)
+    else
+      out = out.join(seperator)
+      out += links
+    end
     return out
   end
 
