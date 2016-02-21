@@ -95,7 +95,7 @@ class Section
     if self.has_index?
       return HTML.link_section(self, **attr)
     else
-      return HTML.span(@title, **attr)
+      return HTML.span(attr[:text] || @title, **attr)
     end
   end
 
