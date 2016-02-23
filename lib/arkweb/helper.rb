@@ -167,7 +167,7 @@ class Helper
       out << HTML.tag(:div, entry, class: "aw-page-preview")
     end
     links = HTML.open_tag(:br)
-    links += HTML.tag(:span, "#{label_links}#{@collection.links(@index)}")
+    links += HTML.tag(:span, "#{label_links}#{@collection.links(@index)}", class: "aw-pagination-links")
     if seperate_links
       out << links
       out = out.join(seperator)
@@ -296,8 +296,10 @@ class Helper
   end
 
   def link_scripts
+    site_scripts = @site.scripts.map {|js| js.link_to }
     page_scripts = @page.scripts.map {|js| js.link_to }
-    return page_scripts.join("\n")
+    scripts = site_scripts + page_scripts
+    return scripts.join("\n")
   end
 
   def link_google_fonts
