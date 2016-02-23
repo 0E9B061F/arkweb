@@ -152,10 +152,13 @@ class Engine
   end
 
   def copy_scripts
+    scripts = @site.scripts
+    FileUtils.mkdir_p(@site.output.scripts) unless @site.scripts.empty?
     @site.pages.each do |page|
-      page.scripts.each do |script|
-        FileUtils.cp_r(script.path.input, script.path.output)
-      end
+      scripts += page.scripts
+    end
+    scripts.each do |script|
+      FileUtils.cp_r(script.path.input, script.path.output)
     end
   end
 
@@ -294,7 +297,7 @@ class Engine
   end
 
   def generate_favicons
-    if @site.assets.favicon;w && ARKWEB.optional_gem('mini_magick')
+    if @site.assets.favicon && ARKWEB.optional_gem('mini_magick')
       msg 'Generating favicons'
       FileUtils.mkdir_p(@site.output.favicons)
       @site.assets.favicon.formats.each do |format|
