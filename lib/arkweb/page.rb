@@ -165,10 +165,12 @@ class Page
     end
     textwise = []
     descend(doc) {|t| textwise << t }
-    ellipsis = Nokogiri::XML::Node.new("span", doc)
-    ellipsis.content = " ..."
-    ellipsis["class"] = "aw-snippet-ellipsis"
-    textwise.last.parent.add_child(ellipsis)
+    if erasing
+      ellipsis = Nokogiri::XML::Node.new("span", doc)
+      ellipsis.content = " ..."
+      ellipsis["class"] = "aw-snippet-ellipsis"
+      textwise.last.parent.add_child(ellipsis)
+    end
     wrap = Nokogiri::XML::Node.new("div", doc)
     wrap[:class] = "aw-snippet"
     doc.xpath('//body/*').each {|e| e.parent = wrap if e.element? }
