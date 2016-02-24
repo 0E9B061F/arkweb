@@ -150,16 +150,20 @@ class Helper
       date = page.date.strftime("%B %e, %Y")
       tags = page.conf[:keywords].join(", ")
       tags = "Tags: #{tags}"
+      unless page.section == @section
+        entry += HTML.tag(:span, "#{page.section.link_to}", class: "aw-page-section")
+        entry += HTML.open_tag(:br)
+      end
       entry += HTML.tag(:h3, page.link_to, class: "aw-page-title")
       entry += HTML.tag(:span, date, class: "aw-page-date")
       entry += HTML.open_tag(:br)
-      unless page.section == @section
-        entry += HTML.tag(:span, "From: #{page.section.link_to}", class: "aw-page-section")
-        entry += HTML.open_tag(:br)
-      end
       unless page.conf[:keywords].empty?
         entry += HTML.tag(:span, tags, class: "aw-page-tags")
         entry += HTML.open_tag(:br)
+      end
+      if !page.images.empty?
+        image = page.images.first
+        entry += image.link_to(class: 'aw-page-thumb')
       end
       unless page.empty?
         entry += HTML.tag(:div, page.snippet, class: "aw-page-desc")
