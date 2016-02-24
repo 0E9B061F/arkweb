@@ -33,18 +33,11 @@ class Section
     @desc = self.conf(:desc) || ''
 
     init_contents
-
-    # Order pages by ctime and give them an index
-    @ordered_pages = Hash[@pages.sort {|p1,p2| p1.last <=> p2.last }]
-    @ordered_pages.each_with_index do |pair,i|
-      pair.last.index = i + 1
-    end
   end
   attr_reader :site
   attr_reader :path
   attr_reader :title
   attr_reader :desc
-  attr_reader :ordered_pages
 
   private
 
@@ -56,6 +49,12 @@ class Section
     @path.input.glob(Site::Types.pages).each do |path|
       page = Page.new(@site, path, self)
       @pages[page.path.name] = page
+    end
+
+    # Order pages by ctime and give them an index
+    @ordered = @pages.values.sort {|p1,p2| p1 <=> p2 }
+    @ordered.each_with_index do |p,i|
+      p.index = i + 1
     end
 
     if self.conf(:autoindex) && !self.has_page?('index')

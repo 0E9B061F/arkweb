@@ -32,6 +32,14 @@ module HasContent
   def sections
     @sections.values
   end
+
+  def ordered_pages
+    @ordered
+  end
+
+  def ordered_members
+    @ordered.reject {|p| p.index? }
+  end
 end
 
 end # module ARKWEB
